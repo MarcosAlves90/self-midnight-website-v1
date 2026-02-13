@@ -75,7 +75,7 @@ export default function ProfilePicUploader() {
     }
 
     return (
-        <div>
+        <div className="profile-uploader">
             <label htmlFor="file-upload">
                 <img src={userData.profilePic || './images/rgPlaceholder.jpg'} alt="Profile" />
                 <div>Upload</div>
@@ -83,7 +83,7 @@ export default function ProfilePicUploader() {
             <input
                 id="file-upload"
                 type="file"
-               
+                className="profile-uploader__input"
                 onChange={handleFileChange}
                 accept="image/*"
             />

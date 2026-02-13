@@ -11,6 +11,9 @@ import { RetroPage } from '../assets/components/RetroUI.jsx';
 export default function Page1() {
     const {userData, setUserData, user} = useContext(UserContext);
     const debounceTimeout = useRef(null);
+    const operatorName = userData.nome || 'Operador desconhecido';
+    const operatorTitle = userData.titulo || 'Sem titulacao';
+    const operatorLevel = userData.nivel || 0;
 
     const saveDataDebounced = useCallback((data) => {
         if (debounceTimeout.current) clearTimeout(debounceTimeout.current);
@@ -59,22 +62,55 @@ export default function Page1() {
 
     return (
         <RetroPage title="Identidade do Agente" subtitle="Cadastro principal, parametros vitais e progressao">
-            <section>
-                <IdentitySection userData={userData} />
-                <PersonalSection userData={userData} onInputChange={handleInputChange} />
-                <MentalWorldSection userData={userData} onInputChange={handleInputChange} />
-                <VitalResourcesSection
-                    userData={userData}
-                    localLife={localLife()}
-                    localEnergy={localEnergy()}
-                    onResourceChange={handleResourceChange}
-                    onInputChange={handleResourceInputChange}
-                />
-                <ProgressionSection userData={userData} onInputChange={handleInputChange} />
+            <section className="page1-console">
+                <div className="page1-console__window retro-window">
+                    <header className="retro-titlebar">
+                        <div className="retro-titlebar__left">
+                            <div className="retro-titlebar__icon" />
+                            <h2 className="retro-titlebar__title">Identidade</h2>
+                        </div>
+                        <div className="retro-titlebar__controls">
+                            <button type="button" aria-label="Minimizar">_</button>
+                            <button type="button" aria-label="Maximizar">[]</button>
+                            <button type="button" aria-label="Fechar">X</button>
+                        </div>
+                    </header>
+
+                    <div className="page1-console__shell">
+                        <div className="page1-console__header">
+                            <div className="page1-console__summary retro-panel retro-panel--compact">
+                                <h3 className="retro-panel__title">Resumo do Operador</h3>
+                                <div className="page1-console__summary-grid">
+                                    <div>
+                                        <p><strong>Nome:</strong> {operatorName}</p>
+                                        <p><strong>Titulo:</strong> {operatorTitle}</p>
+                                    </div>
+                                    <div>
+                                        <p><strong>Nivel:</strong> {operatorLevel}</p>
+                                        <p><strong>Regime:</strong> Campo ativo</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="page1-console__grid">
+                            <IdentitySection userData={userData} />
+                            <PersonalSection userData={userData} onInputChange={handleInputChange} />
+                            <MentalWorldSection userData={userData} onInputChange={handleInputChange} />
+                            <VitalResourcesSection
+                                userData={userData}
+                                localLife={localLife()}
+                                localEnergy={localEnergy()}
+                                onResourceChange={handleResourceChange}
+                                onInputChange={handleResourceInputChange}
+                            />
+                            <ProgressionSection userData={userData} onInputChange={handleInputChange} />
+                        </div>
+                    </div>
+                </div>
             </section>
         </RetroPage>
     );
 }
-
 
 
