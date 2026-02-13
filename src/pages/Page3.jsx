@@ -1,275 +1,102 @@
-import {useCallback, useEffect, useState, useMemo, useContext, useRef} from "react";
-import {
-    ArtsSection,
-    Attributes,
-    Biotipos,
-    PericiasSection,
-    SubArtsSection
-} from "../assets/systems/FichaPage3/FichaPage3System.jsx";
-import {arcArray, atrMap, bioMap, perArray, subArcArray} from "../assets/systems/FichaPage3/FichaPage3Arrays.jsx";
-import {saveUserData} from "../firebaseUtils.js";
+import {useCallback, useEffect, useState, useMemo, useContext, useRef} from 'react';
+import {ArtsSection, Attributes, Biotipos, PericiasSection, SubArtsSection} from '../assets/systems/FichaPage3/FichaPage3System.jsx';
+import {arcArray, atrMap, bioMap, perArray, subArcArray} from '../assets/systems/FichaPage3/FichaPage3Arrays.jsx';
+import {saveUserData} from '../firebaseUtils.js';
 import {ToastContainer, toast} from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
-import {map} from "jquery";
-import {UserContext} from "../UserContext.jsx";
-import styled from "styled-components";
-import {Box, Button, InputAdornment, TextField} from "@mui/material";
-import {Search, ReportGmailerrorred, Report, Lock, LockOpen, Casino} from "@mui/icons-material";
-
-const StyledTextField = styled(TextField)`
-    margin-top: 0;
-    background-color: var(--background);
-    height: fit-content;
-
-    .MuiInputLabel-root, .MuiInputBase-input {
-        font-family: var(--common-font-family), sans-serif !important;
-    }
-
-    & .MuiOutlinedInput-root {
-        & fieldset {
-            border: var(--gray-border);
-            transition: var(--common-transition);
-        }
-
-        &:hover fieldset {
-            border: var(--focus-gray-border);
-        }
-
-        &.Mui-focused fieldset {
-            border: var(--focus-gray-border);
-        }
-    }
-
-    @media (max-width: 991px) {
-        & .MuiInputBase-input, .MuiInputLabel-root {
-            font-size: 3vw;
-        }
-    }
-`;
-
-const StyledInputsBox = styled(Box)`
-    display: flex;
-    gap: 1rem;
-    width: 100%;
-
-    .buttonsBox {
-        display: flex;
-        gap: 1rem;
-    }
-
-    @media (max-width: 991px) {
-        flex-direction: column;
-        gap: 2vw;
-        .buttonsBox {
-            gap: 2vw;
-
-            button {
-                width: 100%;
-            }
-        }
-    }
-`;
-
-const StyledButton = styled(Button)`
-    width: 13rem;
-    padding: 0.4rem;
-    border-radius: 3px;
-    font-weight: bold;
-    font-size: 1rem;
-    color: var(--background);
-    font-family: var(--common-font-family), sans-serif !important;
-
-    &.locked {
-        background-color: var(--common-font-color);
-
-        &:hover {
-            background-color: var(--gray-placeholder);
-        }
-    }
-
-    @media (max-width: 991px) {
-        width: 100%;
-        font-size: 3vw;
-    }
-`;
+import {map} from 'jquery';
+import {UserContext} from '../UserContext.jsx';
+import {StyledButton, StyledTextField} from '../assets/systems/CommonComponents.jsx';
+import { RetroPage, RetroPanel, RetroToolbar, RetroBadge } from '../assets/components/RetroUI.jsx';
 
 export default function Page3() {
-    const [totalPoints, setTotalPoints] = useState({
-        bioPoints: 0,
-        atrPoints: 0,
-        perPoints: 0,
-        arcPoints: 0,
-        subArcPoints: 0
-    });
-
+    const [totalPoints, setTotalPoints] = useState({ bioPoints: 0, atrPoints: 0, perPoints: 0, arcPoints: 0, subArcPoints: 0 });
     const [recommendations, setRecommendations] = useState(false);
-    const [tempRoll, setTempRoll] = useState({
-        Pericia: '',
-        Dice: '',
-        Result: 0
-    });
-
-    const [noStatusDice, setNoStatusDice] = useState([[]]);
+    const [tempRoll, setTempRoll] = useState({ Pericia: '', Dice: '', Result: 0 });
+    const [noStatusDice, setNoStatusDice] = useState('');
     const [searchTerm, setSearchTerm] = useState('');
     const {userData, setUserData, user} = useContext(UserContext);
     const debounceTimeout = useRef(null);
 
     const saveDataDebounced = useCallback((data) => {
-        if (debounceTimeout.current) {
-            clearTimeout(debounceTimeout.current);
-        }
+        if (debounceTimeout.current) clearTimeout(debounceTimeout.current);
         debounceTimeout.current = setTimeout(() => {
-            if (user) {
-                saveUserData(data);
-            }
+            if (user) saveUserData(data);
         }, 500);
     }, [user]);
 
-    const calculateTotalPoints = () => {
-        const newTotalPoints = {
-            bioPoints: 0,
-            atrPoints: 0,
-            perPoints: 0,
-            arcPoints: 0,
-            subArcPoints: 0
-        };
-
-        Object.keys(userData).forEach(key => {
+    const calculateTotalPoints = useCallback(() => {
+        const newTotalPoints = { bioPoints: 0, atrPoints: 0, perPoints: 0, arcPoints: 0, subArcPoints: 0 };
+        Object.keys(userData).forEach((key) => {
             const value = parseFloat(userData[key]);
-            const validValue = isNaN(value) ? 0 : value;
-
+            const validValue = Number.isNaN(value) ? 0 : value;
             if (!key.includes('Points') && !key.endsWith('-bonus')) {
-                if (key.startsWith('biotipo-')) {
-                    newTotalPoints.bioPoints += validValue;
-                } else if (key.startsWith('atributo-')) {
-                    newTotalPoints.atrPoints += validValue;
-                } else if (key.startsWith('pericia-')) {
-                    newTotalPoints.perPoints += validValue;
-                } else if (key.startsWith('art-')) {
-                    newTotalPoints.arcPoints += validValue;
-                } else if (key.startsWith('subArt-')) {
-                    newTotalPoints.subArcPoints += validValue;
-                }
+                if (key.startsWith('biotipo-')) newTotalPoints.bioPoints += validValue;
+                else if (key.startsWith('atributo-')) newTotalPoints.atrPoints += validValue;
+                else if (key.startsWith('pericia-')) newTotalPoints.perPoints += validValue;
+                else if (key.startsWith('art-')) newTotalPoints.arcPoints += validValue;
+                else if (key.startsWith('subArt-')) newTotalPoints.subArcPoints += validValue;
             }
         });
-
         setTotalPoints(newTotalPoints);
-    };
+    }, [userData]);
 
     useEffect(() => {
         saveDataDebounced(userData);
         calculateTotalPoints();
-    }, [userData, saveDataDebounced]);
+    }, [userData, saveDataDebounced, calculateTotalPoints]);
 
     const handleInputChange = (key) => (event) => {
         const {value, type} = event.target;
-        setUserData((prevUserData) => ({
-            ...prevUserData,
-            [key]: type === 'number' ? (value === '' ? '' : parseFloat(value)) : value,
-        }));
+        setUserData((prevUserData) => ({ ...prevUserData, [key]: type === 'number' ? (value === '' ? '' : parseFloat(value)) : value }));
     };
 
     const handleElementChange = (key) => (value) => {
-        setUserData((prevUserData) => ({
-            ...prevUserData,
-            [key]: value,
-        }));
+        setUserData((prevUserData) => ({ ...prevUserData, [key]: value }));
     };
 
     const handleLockChange = () => {
-        const lock = !userData.isLocked;
-        handleElementChange('isLocked')(lock);
-    }
+        handleElementChange('isLocked')(!userData.isLocked);
+    };
 
-    const CalculateAttributesPoints = useCallback(() => {
+    const calculateAttributesPoints = useCallback(() => {
         const nivel = userData.nivel || 1;
-        if (nivel < 4) {
-            return 9;
-        } else if (nivel < 10) {
-            return 10;
-        } else if (nivel < 16) {
-            return 11;
-        } else if (nivel < 19) {
-            return 12;
-        } else {
-            return 13
-        }
+        if (nivel < 4) return 9;
+        if (nivel < 10) return 10;
+        if (nivel < 16) return 11;
+        if (nivel < 19) return 12;
+        return 13;
     }, [userData.nivel]);
 
-    const CalculateAttributesCap = useCallback(() => {
+    const calculateAttributesCap = useCallback(() => {
         const nivel = userData.nivel || 1;
-
-        if (nivel < 4) {
-            return 3;
-        } else if (nivel < 10) {
-            return 4;
-        } else {
-            return 5;
-        }
+        if (nivel < 4) return 3;
+        if (nivel < 10) return 4;
+        return 5;
     }, [userData.nivel]);
 
-    const CalculatePericiasPoints = useCallback(() => {
+    const calculatePericiasPoints = useCallback(() => {
         const nivel = userData.nivel || 1;
         const bPericias = userData['biotipo-Pericias'] || 0;
         const aInt = userData['atributo-INT'] || 0;
 
-        if (bPericias === 0 || aInt === 0) {
-            return 0;
-        } else if (bPericias === 1) {
-            return ((3 + (aInt)) * nivel) + (nivel * 2);
-        } else if (bPericias === 2) {
-            return ((5 + (aInt)) * nivel) + (nivel * 2);
-        } else if (bPericias === 3) {
-            return ((7 + (aInt)) * nivel) + (nivel * 2);
-        } else {
-            return -1;
-        }
+        if (bPericias === 0 || aInt === 0) return 0;
+        if (bPericias === 1) return ((3 + aInt) * nivel) + (nivel * 2);
+        if (bPericias === 2) return ((5 + aInt) * nivel) + (nivel * 2);
+        if (bPericias === 3) return ((7 + aInt) * nivel) + (nivel * 2);
+        return -1;
     }, [userData]);
 
-    const CalculatePericiasCap = useCallback(() => {
-        return userData.nivel || 1;
-    }, [userData.nivel]);
+    const calculatePericiasCap = useCallback(() => userData.nivel || 1, [userData.nivel]);
 
     const rollDice = (e, simpleDice) => {
-
         let diceResult = 0;
         const dice = [];
         let noAttribute = false;
 
-        const emojis = {
-            1: "💀",
-            2: "🤡",
-            3: "😔",
-            4: "😟",
-            5: "🙁",
-            6: "😐",
-            7: "🙂",
-            8: "😀",
-            9: "😃",
-            10: "😄",
-            11: "😁",
-            12: "😎",
-            13: "🥶"
-        };
-
-        const emojiMap = {
-            1: 1, 2: 2, 3: 2, 4: 2, 5: 2, 6: 3, 7: 4, 8: 5, 9: 5,
-            10: 6, 11: 6, 12: 6, 13: 6, 14: 7, 15: 8, 16: 9, 17: 10,
-            18: 11, 19: 12, 20: 13
-        };
-
-        const selectEmoji = (result) => emojiMap[result] || null;
-
-        const notify = (message, emoji) => toast(message, {
-            theme: "dark",
-            position: "bottom-right",
-            icon: () => `${emoji}`,
-        });
+        const notify = (message, icon = '[ROLL]') => toast(message, { theme: 'dark', position: 'bottom-right', icon: () => icon });
 
         function rollSimpleDice(qty, sides) {
-            for (let i = 0; i < qty; i++) {
-                dice.push(Math.floor(Math.random() * sides) + 1);
-            }
+            for (let i = 0; i < qty; i++) dice.push(Math.floor(Math.random() * sides) + 1);
         }
 
         function simpleDiceSum() {
@@ -277,16 +104,7 @@ export default function Page3() {
         }
 
         function chooseSimpleDiceResult() {
-            if (simpleDice.sum) {
-                diceResult = simpleDiceSum();
-            } else {
-                chooseMinOrMax(false);
-            }
-        }
-
-        function notifyRoll(periciaNameProp, diceProp, resultProp) {
-            notify(`${periciaNameProp}: [${diceProp}] = ${resultProp}`,
-                emojis[selectEmoji(noAttribute ? Math.min(...diceProp) : Math.max(...diceProp))]);
+            diceResult = simpleDice.sum ? simpleDiceSum() : Math.max(...dice);
         }
 
         function verifyAttribute(atr, bonus) {
@@ -295,79 +113,51 @@ export default function Page3() {
         }
 
         function rollAttributeDice(atr, bonus) {
-            for (let i = 0; i < (atr + bonus); i++) {
-                dice.push(Math.floor(Math.random() * 20) + 1);
-            }
+            for (let i = 0; i < (atr + bonus); i++) dice.push(Math.floor(Math.random() * 20) + 1);
         }
 
         function chooseMinOrMax(noAtr) {
-            if (!noAtr) {
-                diceResult = Math.max(...dice);
-            } else {
-                diceResult = Math.min(...dice);
-            }
-        }
-
-        function addPericiaBonus(bonus) {
-            diceResult += bonus;
+            diceResult = noAtr ? Math.min(...dice) : Math.max(...dice);
         }
 
         if (atrMap.includes((e.target.id).slice(7))) {
             const attributeName = (e.target.id).slice(7);
             let attribute = userData[`atributo-${attributeName}`] || 0;
             let attributeBonus = userData[`atributo-${attributeName}-bonus`] || 0;
-
             [noAttribute, attribute, attributeBonus] = verifyAttribute(attribute, attributeBonus);
-
             rollAttributeDice(attribute, attributeBonus);
             chooseMinOrMax(noAttribute);
-            notifyRoll(attributeName, dice, diceResult);
+            notify(`${attributeName}: [${dice}] = ${diceResult}`);
             setTempRoll({Pericia: attributeName, Dice: dice.join(', '), Result: diceResult});
+            return;
+        }
 
-        } else if (perArray.map(per => per.pericia).includes((e.target.id).slice(7))) {
+        if (perArray.map((per) => per.pericia).includes((e.target.id).slice(7))) {
             const periciaName = (e.target.id).slice(7);
             const pericia = userData[`pericia-${periciaName}`] || 0;
             const periciaBonus = userData[`pericia-${periciaName}-bonus`] || 0;
-            let attribute = map(perArray, function (per) {
-                if (per.pericia === periciaName) {
-                    return userData[`atributo-${per.atr}`] || 0;
-                }
-                return null;
-            });
-            let attributeBonus = map(perArray, function (per) {
-                if (per.pericia === periciaName) {
-                    return userData[`atributo-${per.atr}-bonus`] || 0;
-                }
-                return null;
-            });
-
+            let attribute = map(perArray, (per) => (per.pericia === periciaName ? userData[`atributo-${per.atr}`] || 0 : null));
+            let attributeBonus = map(perArray, (per) => (per.pericia === periciaName ? userData[`atributo-${per.atr}-bonus`] || 0 : null));
             attribute = attribute.length > 0 ? attribute[0] : 0;
             attributeBonus = attributeBonus.length > 0 ? attributeBonus[0] : 0;
-
             [noAttribute, attribute, attributeBonus] = verifyAttribute(attribute, attributeBonus);
             rollAttributeDice(attribute, attributeBonus);
             chooseMinOrMax(noAttribute);
-            addPericiaBonus(periciaBonus);
-
+            diceResult += periciaBonus;
             const result = diceResult + pericia;
-
-            notifyRoll(periciaName, dice, result);
+            notify(`${periciaName}: [${dice}] = ${result}`);
             setTempRoll({Pericia: periciaName, Dice: dice.join(', '), Result: result});
-        } else {
-            rollSimpleDice(simpleDice.qty, simpleDice.sides);
-            chooseSimpleDiceResult();
-            notifyRoll("N/A", dice, diceResult);
-            setTempRoll({Pericia: "N/A", Dice: dice.join(', '), Result: diceResult});
+            return;
         }
-    }
 
-    const handleSearchChange = useCallback((event) => {
-        setSearchTerm(event.target.value.toLowerCase());
-    }, []);
+        rollSimpleDice(simpleDice.qty, simpleDice.sides);
+        chooseSimpleDiceResult();
+        notify(`Comum: [${dice}] = ${diceResult}`);
+        setTempRoll({Pericia: 'Comum', Dice: dice.join(', '), Result: diceResult});
+    };
 
-    const handleNoStatusDiceChange = useCallback((event) => {
-        setNoStatusDice(event.target.value.toLowerCase());
-    }, []);
+    const handleSearchChange = useCallback((event) => setSearchTerm(event.target.value.toLowerCase()), []);
+    const handleNoStatusDiceChange = useCallback((event) => setNoStatusDice(event.target.value.toLowerCase()), []);
 
     const noStatusDiceRoll = useCallback(() => {
         const regex = /(\d+)d(\d+)(kh\d+|kh)?/g;
@@ -377,44 +167,37 @@ export default function Page3() {
         const symbols = noStatusDice.match(symbolRegex) || [];
         const isolatedNumbers = noStatusDice.match(numberRegex)?.map(Number) || [];
 
-        const notify = (message) => toast(message, {
-            theme: "dark",
-            position: "bottom-right",
-            icon: () => <Casino />,
-        });
+        const notify = (message) => toast(message, { theme: 'dark', position: 'bottom-right', icon: () => '[ROLL]' });
 
-        if (!matches) {
-            console.error('No valid dice notation found');
-            return;
-        }
+        if (!matches) return;
 
-        const rollDice = (num, sides) => Array.from({ length: num }, () => Math.floor(Math.random() * sides) + 1);
-        const calculateResult = (diceArray) => diceArray.reduce((acc, val) => acc + val, 0);
+        const rollOne = (num, sides) => Array.from({ length: num }, () => Math.floor(Math.random() * sides) + 1);
+        const sum = (diceArray) => diceArray.reduce((acc, val) => acc + val, 0);
 
-        const newNoStatusDice = matches.map(match => {
+        const parsedDice = matches.map((match) => {
             const [, num1, num2, kh] = match.match(/(\d+)d(\d+)(kh\d+|kh)?/);
             return [parseInt(num1, 10), parseInt(num2, 10), kh ? (kh === 'kh' ? 'kh1' : kh) : 'c'];
         });
 
-        const results = newNoStatusDice.map(([num, sides, type]) => {
-            const diceResults = rollDice(num, sides);
+        const results = parsedDice.map(([num, sides, type]) => {
+            const diceResults = rollOne(num, sides);
             if (type.startsWith('kh')) {
                 diceResults.sort((a, b) => b - a);
-                return { results: diceResults, result: calculateResult(diceResults.slice(0, parseInt(type.slice(2), 10))) };
+                return { results: diceResults, result: sum(diceResults.slice(0, parseInt(type.slice(2), 10))) };
             }
-            return { results: diceResults, result: calculateResult(diceResults) };
+            return { results: diceResults, result: sum(diceResults) };
         });
 
         let finalResult = results[0].result;
         let symbolIndex = 0;
         let isolatedNumberIndex = 0;
 
-        const formattedDice = noStatusDice.replace(regex, (match, p1, p2, p3, offset, string) => {
+        const formattedDice = noStatusDice.replace(regex, (match, p1, p2, p3) => {
             const index = matches.indexOf(match);
             const diceResults = results[index].results;
             if (p3 && p3.startsWith('kh')) {
                 const keepHighest = parseInt(p3.slice(2), 10);
-                const keptResults = diceResults.slice(0, keepHighest).map(result => `(${result})`);
+                const keptResults = diceResults.slice(0, keepHighest).map((result) => `(${result})`);
                 const otherResults = diceResults.slice(keepHighest);
                 return `[${[...otherResults, ...keptResults].join(', ')}]`;
             }
@@ -423,40 +206,16 @@ export default function Page3() {
 
         for (let i = 0; i < symbols.length; i++) {
             if (symbolIndex < results.length - 1) {
-                switch (symbols[i]) {
-                    case '+':
-                        finalResult += results[symbolIndex + 1].result;
-                        break;
-                    case '-':
-                        finalResult -= results[symbolIndex + 1].result;
-                        break;
-                    case '*':
-                        finalResult *= results[symbolIndex + 1].result;
-                        break;
-                    case '/':
-                        finalResult /= results[symbolIndex + 1].result;
-                        break;
-                    default:
-                        break;
-                }
+                if (symbols[i] === '+') finalResult += results[symbolIndex + 1].result;
+                if (symbols[i] === '-') finalResult -= results[symbolIndex + 1].result;
+                if (symbols[i] === '*') finalResult *= results[symbolIndex + 1].result;
+                if (symbols[i] === '/') finalResult /= results[symbolIndex + 1].result;
                 symbolIndex++;
             } else if (isolatedNumberIndex < isolatedNumbers.length) {
-                switch (symbols[i]) {
-                    case '+':
-                        finalResult += isolatedNumbers[isolatedNumberIndex];
-                        break;
-                    case '-':
-                        finalResult -= isolatedNumbers[isolatedNumberIndex];
-                        break;
-                    case '*':
-                        finalResult *= isolatedNumbers[isolatedNumberIndex];
-                        break;
-                    case '/':
-                        finalResult /= isolatedNumbers[isolatedNumberIndex];
-                        break;
-                    default:
-                        break;
-                }
+                if (symbols[i] === '+') finalResult += isolatedNumbers[isolatedNumberIndex];
+                if (symbols[i] === '-') finalResult -= isolatedNumbers[isolatedNumberIndex];
+                if (symbols[i] === '*') finalResult *= isolatedNumbers[isolatedNumberIndex];
+                if (symbols[i] === '/') finalResult /= isolatedNumbers[isolatedNumberIndex];
                 isolatedNumberIndex++;
             }
         }
@@ -466,220 +225,110 @@ export default function Page3() {
             isolatedNumberIndex++;
         }
 
-        setTempRoll({
-            Pericia: "comum",
-            Dice: formattedDice,
-            Result: finalResult
-        });
-
-        const truncatedFormattedDice = formattedDice.length > 60 ? `${formattedDice.slice(0, 60)}...` : formattedDice;
+        setTempRoll({ Pericia: 'Comum', Dice: formattedDice, Result: finalResult });
+        const truncatedFormattedDice = formattedDice.length > 80 ? `${formattedDice.slice(0, 80)}...` : formattedDice;
         notify(`${truncatedFormattedDice} = ${finalResult}`);
-
     }, [noStatusDice]);
 
-    const filteredBioMap = useMemo(() => bioMap.filter((item) =>
-        item.toLowerCase().includes(searchTerm)
-    ), [searchTerm]);
+    const filteredBioMap = useMemo(() => bioMap.filter((item) => item.toLowerCase().includes(searchTerm)), [searchTerm]);
+    const filteredAtrMap = useMemo(() => atrMap.filter((item) => item.toLowerCase().includes(searchTerm)), [searchTerm]);
+    const filteredPerArray = useMemo(() => perArray.filter((item) => item.pericia.toLowerCase().includes(searchTerm)), [searchTerm]);
+    const filteredArcArray = useMemo(() => arcArray.filter((item) => item.art.toLowerCase().includes(searchTerm)), [searchTerm]);
+    const filteredSubArcArray = useMemo(() => subArcArray.filter((item) => item.subArt.toLowerCase().includes(searchTerm)), [searchTerm]);
 
-    const filteredAtrMap = useMemo(() => atrMap.filter((item) =>
-        item.toLowerCase().includes(searchTerm)
-    ), [searchTerm]);
-
-    const filteredPerArray = useMemo(() => perArray.filter((item) =>
-        item.pericia.toLowerCase().includes(searchTerm)
-    ), [searchTerm]);
-
-    const filteredArcArray = useMemo(() => arcArray.filter((item) =>
-        item.art.toLowerCase().includes(searchTerm)
-    ), [searchTerm]);
-
-    const filteredSubArcArray = useMemo(() => subArcArray.filter((item) =>
-        item.subArt.toLowerCase().includes(searchTerm)
-    ), [searchTerm]);
-
-    useEffect(() => {
-        const diceLength = Math.min(tempRoll.Dice.length, 15);
-        document.documentElement.style.setProperty('--text-length', `${diceLength}`);
-    }, [tempRoll.Dice]);
+    const periciaHeaderValue = !userData.nivel || userData.nivel === '' || Number.isNaN(userData.nivel)
+        ? 'Verifique seu nivel'
+        : calculatePericiasPoints() > 0
+            ? calculatePericiasPoints()
+            : calculatePericiasPoints() === 0
+                ? 'Preencha Biotipo e Atributos'
+                : 'Biotipo invalido';
 
     return (
-        <main className={"mainCommon page-3"}>
+        <RetroPage title="Status e Rolagens" subtitle="Distribuicao de pontos, controle de bloqueio e simulador de dados">
+            <ToastContainer limit={5} closeOnClick />
 
-            <ToastContainer limit={5} closeOnClick/>
-            <section className={"section-dice"}>
-                <div className={"display-flex-center"}>
-                    <h2 className={"title-2"}>Rolagem:</h2>
-                    <article className={"display-flex-center dice"}>
-                        <div
-                            className={"dice-background dice-font left"}>{tempRoll.Pericia ? tempRoll.Pericia : "Nenhum"}</div>
-                        <div className={"dice-background dice-font center display-flex-center"}>
-                        <p>
-                            {`${tempRoll.Dice.slice(0, 60)}${tempRoll.Dice.length > 90 ? '...' : ''}`}
-                        </p>
-                        </div>
-                        <div className={"dice-background dice-font right"}>{tempRoll.Result ? tempRoll.Result : 0}</div>
-                    </article>
+            <RetroPanel title="Ultima rolagem">
+                <div>
+                    <RetroBadge>Pericia: {tempRoll.Pericia || 'Nenhuma'}</RetroBadge>
+                    <RetroBadge>Dados: {`${tempRoll.Dice.slice(0, 60)}${tempRoll.Dice.length > 60 ? '...' : ''}`}</RetroBadge>
+                    <RetroBadge>Resultado: {tempRoll.Result || 0}</RetroBadge>
                 </div>
-            </section>
-            <section className={"section-options"}>
-                <StyledInputsBox>
-                    <Box className={"buttonsBox"}>
-                        <StyledButton type="button"
-                                      variant="contained" color="primary"
-                                      className={`${userData.isLocked ? "locked" : ""}`}
-                                      onClick={handleLockChange}
-                                      endIcon={userData.isLocked ? <Lock/> : <LockOpen/>}
-                        >
-                            {userData.isLocked ? "Bloqueado" : "Desbloqueado"}
-                        </StyledButton>
-                        <StyledButton type={"button"}
-                                      variant="contained" color="primary"
-                                      className={`${recommendations ? "locked" : ""}`}
-                                      onClick={() => setRecommendations(!recommendations)}
-                                      endIcon={recommendations ? <Report/> : <ReportGmailerrorred/>}
-                        >
-                            {"Regras"}
-                        </StyledButton>
-                    </Box>
+            </RetroPanel>
+
+            <RetroPanel title="Controles">
+                <RetroToolbar>
+                    <div>
+                        <StyledButton onClick={handleLockChange}>{userData.isLocked ? 'Bloqueado [LOCK]' : 'Desbloqueado [OPEN]'}</StyledButton>
+                        <StyledButton onClick={() => setRecommendations(!recommendations)}>{recommendations ? 'Ocultar regras' : 'Mostrar regras'}</StyledButton>
+                    </div>
                     <StyledTextField
                         type="text"
-                        variant="outlined"
                         placeholder="Pesquisar status..."
                         value={searchTerm}
                         onChange={handleSearchChange}
                         fullWidth
-                        slotProps={{
-                            input: {
-                                startAdornment: (
-                                    <InputAdornment position="start">
-                                        <Search/>
-                                    </InputAdornment>
-                                ),
-                            },
-                        }}
+                        slotProps={{ input: { startAdornment: '[FIND]' } }}
                     />
-                </StyledInputsBox>
-                <div className={"alert-box-collapsible"} style={recommendations ? null : {display: "none"}}>
-                    <div className={"alert-box"}>
-                        <div className={"alert-box-message"}>
-                            <p>Máximo de pontos em cada categoria:</p>
-                            <p>biotipo: máximo: [3]</p>
-                            <p>atributos: máximo: [{CalculateAttributesCap()}]</p>
-                            <p>perícias: máximo: [{CalculatePericiasCap()}]</p>
-                            <p className={"last-p"}>artes e subartes: máximo [{15}]</p>
-                        </div>
+                </RetroToolbar>
+
+                {recommendations ? (
+                    <div>
+                        <p>Cap biotipo: 3</p>
+                        <p>Cap atributos: {calculateAttributesCap()}</p>
+                        <p>Cap pericias: {calculatePericiasCap()}</p>
+                        <p>Cap artes e subartes: 15</p>
                     </div>
-                </div>
-                <StyledInputsBox>
+                ) : null}
+
+                <RetroToolbar>
                     <StyledTextField
                         type="text"
-                        variant="outlined"
-                        placeholder="Escreva seu dado..."
+                        placeholder="Ex.: 2d20+4 ou 4d6kh3"
                         value={noStatusDice}
                         onChange={handleNoStatusDiceChange}
                         fullWidth
-                        slotProps={{
-                            input: {
-                                startAdornment: (
-                                    <InputAdornment position="start">
-                                        <Casino/>
-                                    </InputAdornment>
-                                ),
-                            },
-                        }}
+                        slotProps={{ input: { startAdornment: '[DICE]' } }}
                     />
-                    <StyledButton type={"button"}
-                                  variant="contained" color="primary"
-                                  onClick={noStatusDiceRoll}
-                                  endIcon={<Casino/>}
-                    >
-                        {"Rolar"}
-                    </StyledButton>
-                </StyledInputsBox>
-            </section>
+                    <StyledButton onClick={noStatusDiceRoll}>Rolar</StyledButton>
+                </RetroToolbar>
+            </RetroPanel>
 
-            <section className={`section-biotipo section-status ${filteredBioMap.length < 1 ? "display-none" : ""}`}>
-                <div className={"display-flex-center column"}>
-                    <h2 className={"mainCommon title-2"}>Biotipo: [{totalPoints.bioPoints}]/[9]</h2>
-                    <p className={"statusDescription"}>O biotipo representa a essência do personagem,
-                        seu estado natural sem treinos, modificações ou conhecimentos.</p>
-                </div>
-                <div className={"input-center justify-center min"}>
-                    {filteredBioMap.map((biotipo) => (
-                        <Biotipos
-                            key={biotipo}
-                            biotipo={biotipo}
-                            handleInputChange={handleInputChange}
-                        />
-                    ))}
-                </div>
-            </section>
+            {filteredBioMap.length > 0 ? (
+                <RetroPanel title={`Biotipo [${totalPoints.bioPoints}/9]`}>
+                    <div>
+                        {filteredBioMap.map((biotipo) => <Biotipos key={biotipo} biotipo={biotipo} handleInputChange={handleInputChange} />)}
+                    </div>
+                </RetroPanel>
+            ) : null}
 
-            <section className={`section-atributos section-status ${filteredAtrMap.length < 1 ? "display-none" : ""}`}>
-                <div className={"display-flex-center column"}>
-                    <h2 className={"mainCommon title-2"}>Atributos:
-                        [{totalPoints.atrPoints}]/[{CalculateAttributesPoints()}]</h2>
-                    <p className={"statusDescription"}>Os atributos são os status principais do personagem.
-                        Eles guiam as perícias e as (sub)artes arcanas.</p>
-                </div>
-                <div className={"input-center justify-center min"}>
-                    {filteredAtrMap.map((atr) => (
-                        <Attributes
-                            key={atr}
-                            atributo={atr}
-                            atr={atr}
-                            handleInputChange={handleInputChange}
-                            rollDice={rollDice}
-                        />
-                    ))}
-                </div>
-            </section>
-            <section className={`section-perArray section-status ${filteredPerArray.length < 1 ? "display-none" : ""}`}>
-                <div className={"display-flex-center column"}>
-                    <h2 className={"mainCommon title-2"}>
-                        Perícias:
-                        [{totalPoints.perPoints}]/[{!userData.nivel || userData.nivel === "" || isNaN(userData.nivel) ? "Verifique seu nível" :
-                        CalculatePericiasPoints() > 0 ? CalculatePericiasPoints() :
-                            CalculatePericiasPoints() === 0 ? "Preencha o Biotipo e Atributos" : "Biotipo maior do que o esperado"}]
-                    </h2>
-                    <p className={"statusDescription"}>As perícias são os conhecimentos e habilidades naturais do
-                        personagem, elas determinam aquilo que ele sabe ou não fazer.</p>
-                </div>
-                <PericiasSection
-                    rollDice={rollDice}
-                    handleInputChange={handleInputChange}
-                    perArray={filteredPerArray}
-                />
-            </section>
+            {filteredAtrMap.length > 0 ? (
+                <RetroPanel title={`Atributos [${totalPoints.atrPoints}/${calculateAttributesPoints()}]`}>
+                    <div>
+                        {filteredAtrMap.map((atr) => <Attributes key={atr} atributo={atr} atr={atr} handleInputChange={handleInputChange} rollDice={rollDice} />)}
+                    </div>
+                </RetroPanel>
+            ) : null}
 
-            <section className={`section-arts section-status ${filteredArcArray.length < 1 ? "display-none" : ""}`}>
-                <div className={"display-flex-center column"}>
-                    <h2 className={"mainCommon title-2"}>
-                        Artes: [{totalPoints.arcPoints}]/[{(userData['pericia-Magia Arcana'] || 0) * 5}]
-                    </h2>
-                    <p className={"statusDescription"}>As artes arcanas são os focos de conhecimento em magia
-                        arcana do personagem, definindo em quais ações ele é melhor.</p>
-                </div>
-                <ArtsSection
-                    handleInputChange={handleInputChange}
-                    arcArray={filteredArcArray}
-                />
-            </section>
+            {filteredPerArray.length > 0 ? (
+                <RetroPanel title={`Pericias [${totalPoints.perPoints}/${periciaHeaderValue}]`}>
+                    <PericiasSection rollDice={rollDice} handleInputChange={handleInputChange} perArray={filteredPerArray} />
+                </RetroPanel>
+            ) : null}
 
-            <section
-                className={`section-subArts section-status ${filteredSubArcArray.length < 1 ? "display-none" : ""}`}>
-                <div className={"display-flex-center column"}>
-                    <h2 className={"mainCommon title-2"}>
-                        Subartes: [{totalPoints.subArcPoints}]/[{(userData['pericia-Magia Arcana'] || 0) * 5}]
-                    </h2>
-                    <p className={"statusDescription"}>As subartes arcanas são as especializações das artes
-                        arcanas do personagem, aumentando as possibilidades de skills.</p>
-                </div>
-                <SubArtsSection
-                    handleInputChange={handleInputChange}
-                    subArcArray={filteredSubArcArray}
-                />
-            </section>
-        </main>
+            {filteredArcArray.length > 0 ? (
+                <RetroPanel title={`Artes [${totalPoints.arcPoints}/${(userData['pericia-Magia Arcana'] || 0) * 5}]`}>
+                    <ArtsSection handleInputChange={handleInputChange} arcArray={filteredArcArray} />
+                </RetroPanel>
+            ) : null}
+
+            {filteredSubArcArray.length > 0 ? (
+                <RetroPanel title={`Subartes [${totalPoints.subArcPoints}/${(userData['pericia-Magia Arcana'] || 0) * 5}]`}>
+                    <SubArtsSection handleInputChange={handleInputChange} subArcArray={filteredSubArcArray} />
+                </RetroPanel>
+            ) : null}
+        </RetroPage>
     );
 }
+
+

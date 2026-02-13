@@ -1,113 +1,58 @@
-import styled from "styled-components";
-import {Button, TextField, FormControl} from "@mui/material";
+import PropTypes from 'prop-types';
 
-export const StyledTextField = styled(TextField)`
-    margin-top: 0;
-    background-color: var(--background);
-    height: fit-content;
-    
-    span {
-        display: block;
-        width: 0;
-    }
+export function StyledTextField({
+    multiline = false,
+    minRows = 3,
+    label,
+    slotProps,
+    ...props
+}) {
+    const startAdornment = slotProps?.input?.startAdornment;
 
-    .MuiInputLabel-root, .MuiInputBase-input {
-        font-family: var(--common-font-family), sans-serif !important;
-    }
+    return (
+        <label>
+            {label ? <span>{label}</span> : null}
+            <div>
+                {startAdornment ? <span>{startAdornment}</span> : null}
+                {multiline ? <textarea rows={minRows} {...props} /> : <input {...props} />}
+            </div>
+        </label>
+    );
+}
 
-    & .MuiOutlinedInput-root {
-        & fieldset {
-            border: var(--gray-border);
-            transition: var(--common-transition);
-        }
+StyledTextField.propTypes = {
+    multiline: PropTypes.bool,
+    minRows: PropTypes.number,
+    label: PropTypes.string,
+    slotProps: PropTypes.object,
+};
 
-        &:hover fieldset {
-            border: var(--focus-gray-border);
-        }
+export function StyledFormControl({ children }) {
+    return <div>{children}</div>;
+}
 
-        &.Mui-focused fieldset {
-            border: var(--focus-gray-border);
-        }
-    }
+StyledFormControl.propTypes = {
+    children: PropTypes.node,
+};
 
-    @media (max-width: 991px) {
-        & .MuiInputBase-input, .MuiInputLabel-root {
-            font-size: 3vw;
-        }
-    }
-`;
+export function StyledButton({
+    startIcon,
+    endIcon,
+    children,
+    ...props
+}) {
+    return (
+        <button {...props}>
+            {startIcon}
+            <span>{children}</span>
+            {endIcon}
+        </button>
+    );
+}
 
-export const StyledFormControl = styled(FormControl)`
-    margin-top: 0;
-    
-    .MuiSelect-select {
-        height: 1.4375em;
-        display: flex;
-        align-items: center;
-    }
-    
-    .MuiInputLabel-root, .MuiInputBase-input {
-        font-family: var(--common-font-family), sans-serif !important;
-        text-align: left;
-    }
+StyledButton.propTypes = {
+    startIcon: PropTypes.node,
+    endIcon: PropTypes.node,
+    children: PropTypes.node,
+};
 
-    span {
-        display: block;
-        width: 0;
-    }
-
-    & .MuiFilledInput-root {
-        background-color: var(--background);
-    }
-
-    & .MuiOutlinedInput-root {
-        & fieldset {
-            border: var(--gray-border);
-            transition: var(--common-transition);
-        }
-
-        &:hover fieldset {
-            border: var(--focus-gray-border);
-        }
-
-        &.Mui-focused fieldset {
-            border: var(--focus-gray-border);
-        }
-    }
-
-    @media (max-width: 991px) {
-        & .MuiInputBase-input, .MuiInputLabel-root {
-            font-size: 3vw;
-        }
-    }
-`;
-
-export const StyledButton = styled(Button)`
-    width: 10rem;
-    padding: 0.4rem;
-    border-radius: 3px;
-    font-weight: bold;
-    font-size: 1rem;
-    color: var(--background);
-    font-family: var(--common-font-family), sans-serif !important;
-    
-    &.big-width {
-        width: 13rem;
-        &.more {
-            width: 17rem;
-        }
-    }
-
-    &.delete {
-        background-color: var(--danger);
-
-        &:hover {
-            background-color: var(--danger-hover);
-        }
-    }
-
-    @media (max-width: 991px) {
-        width: 100% !important;
-        font-size: 3vw;
-    }
-`;

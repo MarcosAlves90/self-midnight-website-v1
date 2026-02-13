@@ -40,3 +40,4 @@ export const arcColors = {
     "MOD": {"background": "var(--color-modification)", "color" : "black"},
     "CRI": {"background": "var(--color-creation)", "color" : "black"},
 }
+

@@ -1,5 +1,4 @@
 import PropTypes from 'prop-types';
-import styles from './CustomInput.module.css';
 
 export default function CustomInput({
     label,
@@ -15,24 +14,15 @@ export default function CustomInput({
     endAdornment,
     startAdornment,
     fullWidth = true,
-    className = '',
     ...props
 }) {
-    const inputId = `input-${label.replace(/\s+/g, '-').toLowerCase()}`;
+    const inputId = `input-${(label || 'field').replace(/\s+/g, '-').toLowerCase()}`;
 
     return (
-        <div className={`${styles.inputContainer} ${fullWidth ? styles.fullWidth : ''} ${className}`}>
-            {label && (
-                <label htmlFor={inputId} className={styles.label}>
-                    {label}
-                </label>
-            )}
-            <div className={styles.inputWrapper}>
-                {startAdornment && (
-                    <div className={styles.adornment} aria-hidden="true">
-                        {startAdornment}
-                    </div>
-                )}
+        <div>
+            {label ? <label htmlFor={inputId}>{label}</label> : null}
+            <div>
+                {startAdornment ? <span>{startAdornment}</span> : null}
                 <input
                     id={inputId}
                     type={type}
@@ -44,14 +34,9 @@ export default function CustomInput({
                     min={min}
                     max={max}
                     step={step}
-                    className={styles.input}
                     {...props}
                 />
-                {endAdornment && (
-                    <div className={styles.adornment} aria-hidden="true">
-                        {endAdornment}
-                    </div>
-                )}
+                {endAdornment ? <span>{endAdornment}</span> : null}
             </div>
         </div>
     );
@@ -71,5 +56,5 @@ CustomInput.propTypes = {
     endAdornment: PropTypes.node,
     startAdornment: PropTypes.node,
     fullWidth: PropTypes.bool,
-    className: PropTypes.string,
 };
+

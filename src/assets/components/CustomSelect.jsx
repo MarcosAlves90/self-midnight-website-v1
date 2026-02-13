@@ -1,5 +1,4 @@
 import PropTypes from 'prop-types';
-import styles from './CustomSelect.module.css';
 
 export default function CustomSelect({
     label,
@@ -10,36 +9,29 @@ export default function CustomSelect({
     disabled = false,
     required = false,
     fullWidth = true,
-    className = '',
     ...props
 }) {
-    const selectId = `select-${label.replace(/\s+/g, '-').toLowerCase()}`;
+    const selectId = `select-${(label || 'field').replace(/\s+/g, '-').toLowerCase()}`;
 
     return (
-        <div className={`${styles.selectContainer} ${fullWidth ? styles.fullWidth : ''} ${className}`}>
-            {label && (
-                <label htmlFor={selectId} className={styles.label}>
-                    {label}
-                </label>
-            )}
-            <div className={styles.selectWrapper}>
+        <div>
+            {label ? <label htmlFor={selectId}>{label}</label> : null}
+            <div>
                 <select
                     id={selectId}
                     value={value}
                     onChange={onChange}
                     disabled={disabled}
                     required={required}
-                    className={styles.select}
                     {...props}
                 >
-                    {placeholder && <option value="" disabled>{placeholder}</option>}
+                    {placeholder ? <option value="" disabled>{placeholder}</option> : null}
                     {options.map((option) => (
                         <option key={option.value} value={option.value}>
                             {option.label}
                         </option>
                     ))}
                 </select>
-                <div className={styles.arrow} aria-hidden="true">▼</div>
             </div>
         </div>
     );
@@ -59,5 +51,5 @@ CustomSelect.propTypes = {
     disabled: PropTypes.bool,
     required: PropTypes.bool,
     fullWidth: PropTypes.bool,
-    className: PropTypes.string,
 };
+

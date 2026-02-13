@@ -78,3 +78,4 @@ export const subArcArray = [
     {subArt: "Fusão", art: "MOD"},
     {subArt: "Multiplicação", art: "CRI"},
 ]
+

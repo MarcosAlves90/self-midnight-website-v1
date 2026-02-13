@@ -1,48 +1,9 @@
-import {useEffect, useContext} from "react";
+import { useEffect, useContext } from 'react';
 import imageCompression from 'browser-image-compression';
-import {UserContext} from "../../UserContext.jsx";
-import {FileUpload} from '@mui/icons-material';
-import styled from 'styled-components';
-import {Box} from "@mui/material";
-
-const StyledLabel = styled.label`
-    position: relative;
-
-    .filter {
-        transition: all 0.2s ease-in-out;
-        border-radius: 10px 0 0 10px;
-        border: 4px solid transparent;
-        opacity: 0;
-        position: absolute;
-        width: 100%;
-        height: 100%;
-        pointer-events: none;
-        background-color: rgba(23, 29, 46, 0.29);
-    }
-
-    .uploadIcon {
-        transition: all 0.2s ease-in-out;
-        opacity: 0;
-        width: 6rem;
-        height: 6rem;
-        position: absolute;
-        pointer-events: none;
-        fill: white;
-        z-index: 5;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-    }
-
-    &:hover {
-        .uploadIcon, .filter {
-            opacity: 1;
-        }
-    }
-`;
+import { UserContext } from '../../UserContext.jsx';
 
 export default function ProfilePicUploader() {
-    const {userData, setUserData} = useContext(UserContext);
+    const { userData, setUserData } = useContext(UserContext);
 
     const handleElementChange = (key) => (value) => {
         setUserData((prevUserData) => ({
@@ -62,7 +23,7 @@ export default function ProfilePicUploader() {
                         maxWidthOrHeight: 150,
                         useWebWorker: false,
                         quality: 0.7,
-                        outputFormat: 'image/jpeg'
+                        outputFormat: 'image/jpeg',
                     };
 
                     try {
@@ -73,8 +34,6 @@ export default function ProfilePicUploader() {
                                 handleElementChange('profilePic')(e.target.result);
                             };
                             reader.readAsDataURL(compressedFile);
-                        } else {
-                            console.error('Compression returned undefined.');
                         }
                     } catch (error) {
                         console.error(error);
@@ -87,7 +46,7 @@ export default function ProfilePicUploader() {
         return () => {
             window.removeEventListener('paste', handlePaste);
         };
-    }, []);
+    }, [setUserData]);
 
     async function handleFileChange(event) {
         const file = event.target.files[0];
@@ -97,7 +56,7 @@ export default function ProfilePicUploader() {
                 maxWidthOrHeight: 150,
                 useWebWorker: false,
                 quality: 0.7,
-                outputFormat: 'image/jpeg'
+                outputFormat: 'image/jpeg',
             };
 
             try {
@@ -108,8 +67,6 @@ export default function ProfilePicUploader() {
                         handleElementChange('profilePic')(e.target.result);
                     };
                     reader.readAsDataURL(compressedFile);
-                } else {
-                    console.error('Compression returned undefined.');
                 }
             } catch (error) {
                 console.error(error);
@@ -118,25 +75,20 @@ export default function ProfilePicUploader() {
     }
 
     return (
-        <div className="profile-pic-image">
-            <StyledLabel htmlFor="file-upload" className="custom-file-upload">
-                <FileUpload className={"uploadIcon"}/>
-                <Box className={"filter"}/>
-                <img
-                    src={userData.profilePic || './images/rgPlaceholder.jpg'}
-                    alt="Profile"
-                    className={`image-profile ${userData.profilePic ? 'active' : ''}`}
-                    style={{cursor: 'pointer'}}
-                />
-            </StyledLabel>
+        <div>
+            <label htmlFor="file-upload">
+                <img src={userData.profilePic || './images/rgPlaceholder.jpg'} alt="Profile" />
+                <div>Upload</div>
+            </label>
             <input
                 id="file-upload"
                 type="file"
-                className="file-upload"
-                style={{display: 'none'}}
+               
                 onChange={handleFileChange}
                 accept="image/*"
             />
         </div>
     );
 }
+
+
