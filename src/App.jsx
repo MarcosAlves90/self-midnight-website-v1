@@ -13,8 +13,9 @@ import { decompressData } from './assets/systems/SaveLoad.jsx';
 const ROUTES_WITHOUT_NAVBAR = ['/fichas', '/'];
 
 const LoadingFallback = () => (
-    <div id="loader">
-        <div />
+    <div id="loader" className="retro-loader" aria-live="polite" aria-busy="true">
+        <div className="retro-loader__spinner" />
+        <p className="retro-loader__label">Carregando terminal...</p>
     </div>
 );
 
@@ -106,7 +107,7 @@ function App() {
 
     return (
         <SidebarProvider>
-            <main>
+            <main className="app-shell">
                 {shouldShowNavBar ? <NavBar /> : null}
                 <Suspense fallback={<LoadingFallback />}>
                     <Routes>

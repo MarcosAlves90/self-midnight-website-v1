@@ -18,7 +18,7 @@ export default function EnterButton() {
     return (
         <button
             onClick={handleClick}
-           
+            className="retro-button retro-button--cta"
             aria-label="Entrar na aplicacao"
         >
             Entrar

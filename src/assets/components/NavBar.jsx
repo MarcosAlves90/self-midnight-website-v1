@@ -4,7 +4,6 @@ import { useSignOut } from '../systems/SaveLoad.jsx';
 import { onAuthStateChanged } from 'firebase/auth';
 import { auth } from '../../firebase';
 import { UserContext } from '../../UserContext.jsx';
-import { SidebarContext } from '../../SidebarContext.jsx';
 import { saveUserData } from '../../firebaseUtils.js';
 
 const navItems = [
@@ -21,10 +20,9 @@ const getPageTitle = (pathname) => navItems.find((nav) => nav.path === pathname)
 
 export default function NavBar() {
     const [isMenuOpen, setMenuOpen] = useState(false);
-    const [isCompact, setIsCompact] = useState(() => (typeof window !== 'undefined' ? localStorage.getItem('sidebarCompact') === 'true' : false));
+    const [isCompact] = useState(() => (typeof window !== 'undefined' ? localStorage.getItem('sidebarCompact') === 'true' : false));
     const [currentUser, setCurrentUser] = useState(null);
     const { userData, setUserData } = useContext(UserContext);
-    const { toggleCompact } = useContext(SidebarContext);
 
     const location = useLocation();
     const navigate = useNavigate();
@@ -35,11 +33,6 @@ export default function NavBar() {
     const handleMenuToggle = useCallback(() => {
         setMenuOpen((prev) => !prev);
     }, []);
-
-    const handleCompactToggle = useCallback(() => {
-        setIsCompact((prev) => !prev);
-        toggleCompact();
-    }, [toggleCompact]);
 
     const handleLogoutClick = useCallback(() => {
         saveUserData(userData);
@@ -75,43 +68,73 @@ export default function NavBar() {
 
     return (
         <>
-            <div>
-                <span>{currentPage}</span>
-                <button onClick={handleMenuToggle} aria-label="Alternar menu">Menu</button>
+            <div className="retro-topbar">
+                <div className="retro-topbar__left">
+                    <span className="retro-topbar__title">Status: {currentPage}</span>
+                    <span className="retro-topbar__pulse" aria-hidden="true" />
+                </div>
+                <button className="retro-button retro-button--small" onClick={handleMenuToggle} aria-label="Alternar menu">
+                    Menu
+                </button>
             </div>
 
-            <nav aria-label="Menu principal">
-                <div>
-                    <div>
-                        <Link to="/" onClick={handleNavItemClick}>MidNight</Link>
-                        <button onClick={handleCompactToggle} title={isCompact ? 'Expandir' : 'Compactar'}>
-                            {isCompact ? '>' : '<'}
-                        </button>
+            <nav className={`retro-nav ${isMenuOpen ? 'retro-nav--open' : ''}`} aria-label="Menu principal">
+                <div className="retro-nav__window retro-window">
+                    <header className="retro-titlebar retro-titlebar--nav">
+                        <div className="retro-titlebar__left">
+                            <div className="retro-titlebar__icon" />
+                            <h2 className="retro-titlebar__title">CONSOLE</h2>
+                        </div>
+                        <div className="retro-titlebar__controls">
+                            <button type="button" aria-label="Minimizar">_</button>
+                            <button type="button" aria-label="Maximizar">[]</button>
+                            <button type="button" aria-label="Fechar" onClick={handleMenuToggle}>X</button>
+                        </div>
+                    </header>
+
+                    <div className="retro-nav__content">
+                        <div className="retro-nav__header">
+                            <div className="retro-nav__brand">
+                                <Link to="/" className="retro-nav__logo" onClick={handleNavItemClick}>HighNoon</Link>
+                            </div>
+                            <div className="retro-nav__current">Sessao ativa: {currentPage}</div>
+                        </div>
+
+                        <div className="retro-nav__links">
+                            {navItems.map(({ label, path }) => (
+                                <Link
+                                    key={path}
+                                    to={path}
+                                    onClick={handleNavItemClick}
+                                    title={label}
+                                    className={`retro-nav__link ${location.pathname === path ? 'retro-nav__link--active' : ''}`}
+                                    aria-current={location.pathname === path ? 'page' : undefined}
+                                >
+                                    <span className="retro-nav__link-bullet" aria-hidden="true">▶</span>
+                                    {label}
+                                </Link>
+                            ))}
+                        </div>
+
+                        <div className="retro-nav__meta">
+                            <div>Usuario: {currentUser?.email || 'visitante'}</div>
+                            <div>Ficha: {userData?.nome || 'nao definida'}</div>
+                        </div>
+
+                        <div className="retro-nav__actions">
+                            <button
+                                className="retro-button retro-button--small"
+                                onClick={handleLoginClick}
+                                title={currentUser ? 'Sair' : 'Login'}
+                            >
+                                {currentUser ? 'Encerrar sessao' : 'Entrar'}
+                            </button>
+                        </div>
                     </div>
-                    <div>{currentPage}</div>
-                </div>
-
-                <div>
-                    {navItems.map(({ label, path }) => (
-                        <Link key={path} to={path} onClick={handleNavItemClick} title={label}>
-                            {label}
-                        </Link>
-                    ))}
-                </div>
-
-                <div>
-                    <div>Usuario: {currentUser?.email || 'visitante'}</div>
-                    <div>Ficha: {userData?.nome || 'nao definida'}</div>
-                </div>
-
-                <div>
-                    <button onClick={handleLoginClick} title={currentUser ? 'Sair' : 'Login'}>
-                        {currentUser ? 'Encerrar sessao' : 'Entrar'}
-                    </button>
                 </div>
             </nav>
 
-            {isMenuOpen ? <div onClick={handleMenuToggle} aria-hidden={true} /> : null}
+            {isMenuOpen ? <div className="retro-nav__backdrop" onClick={handleMenuToggle} aria-hidden={true} /> : null}
         </>
     );
 }

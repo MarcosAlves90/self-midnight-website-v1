@@ -5,15 +5,13 @@ export default function Page0() {
     return (
         <>
             <Background />
-            <main>
+            <main className="retro-home">
                 <HeroSection
                     category="THE MENTAL WORLD: ANO 1"
-                    title="MidNight"
+                    title="HighNoon"
                     subtitle="Clearance Nivel OMEGA. Terminal de acesso classificado Sevastopol."
                 />
             </main>
         </>
     );
 }
-
-
