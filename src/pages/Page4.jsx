@@ -7,6 +7,7 @@ import ReactModal from 'react-modal';
 import { RetroPage, RetroPanel, RetroCard, RetroBadge, RetroModalHeader, RetroWindow } from '../assets/components/RetroUI.jsx';
 import { useDebouncedCloudSave } from '../assets/systems/useDebouncedCloudSave.js';
 import Seo from '../assets/components/Seo.jsx';
+import { buildShareCode, normalizeSkill, parseShareCode } from '../assets/systems/shareUtils.js';
 
 ReactModal.setAppElement('#root');
 
@@ -45,23 +46,35 @@ export default function Page4() {
         closeModal();
     }, [setUserData, closeModal, selectedItem]);
 
+    const importSkills = useCallback((items) => {
+        const normalized = items.map((item) => ({ ...normalizeSkill(item), id: uuidv4() }));
+        if (!normalized.length) return;
+        setUserData((prevUserData) => ({
+            ...prevUserData,
+            skillsArray: [...(prevUserData.skillsArray || []), ...normalized],
+        }));
+    }, [setUserData]);
+
     const handleCopy = useCallback(async () => {
-        if (selectedItem) await navigator.clipboard.writeText(JSON.stringify(selectedItem));
-    }, [selectedItem]);
+        const source = localItem || selectedItem;
+        if (!source) return;
+        const shareCode = buildShareCode('SKILL', normalizeSkill(source));
+        await navigator.clipboard.writeText(shareCode);
+    }, [localItem, selectedItem]);
 
     const handlePaste = useCallback(async () => {
         try {
             const text = await navigator.clipboard.readText();
-            const skill = JSON.parse(text);
-            const newSkill = { ...skill, id: uuidv4() };
-            setUserData((prevUserData) => ({
-                ...prevUserData,
-                skillsArray: [...(prevUserData.skillsArray || []), newSkill],
-            }));
+            const parsed = parseShareCode(text);
+            if (!parsed) return;
+            if (parsed.type && parsed.type !== 'SKILL') return;
+            const data = parsed.data ?? parsed;
+            const items = Array.isArray(data) ? data : [data];
+            importSkills(items);
         } catch (err) {
             console.error('Falha ao colar a skill: ', err);
         }
-    }, [setUserData]);
+    }, [importSkills]);
 
     const uniqueDomains = useMemo(() => {
         const domains = (userData.skillsArray || [])
@@ -172,7 +185,7 @@ export default function Page4() {
                         <StyledTextField value={localItem.image || ''} name="image" onChange={handleInputChange} label="Link da imagem" />
                         <div className="modal-actions">
                             <StyledButton variant="danger" onClick={handleDelete}>Deletar</StyledButton>
-                            <StyledButton onClick={handleCopy}>Copiar</StyledButton>
+                            <StyledButton onClick={handleCopy}>Copiar codigo</StyledButton>
                         </div>
                         </div>
                     </div>
@@ -198,7 +211,7 @@ export default function Page4() {
                                 />
                                 <div className="library-actions">
                                     <StyledButton onClick={handleCreateSkill}>Criar Skill</StyledButton>
-                                    <StyledButton onClick={handlePaste}>Colar Skill</StyledButton>
+                                    <StyledButton onClick={handlePaste}>Importar codigo</StyledButton>
                                 </div>
                             </div>
 

@@ -7,6 +7,7 @@ import { StyledButton, StyledTextField } from '../assets/systems/CommonComponent
 import { RetroPage, RetroPanel, RetroCard, RetroBadge, RetroModalHeader, RetroWindow } from '../assets/components/RetroUI.jsx';
 import { useDebouncedCloudSave } from '../assets/systems/useDebouncedCloudSave.js';
 import Seo from '../assets/components/Seo.jsx';
+import { buildShareCode, normalizeItem, parseShareCode } from '../assets/systems/shareUtils.js';
 
 ReactModal.setAppElement('#root');
 
@@ -90,20 +91,33 @@ export default function Page6() {
         closeModal();
     }, [userData.itemsArray, selectedItem, saveItems, closeModal]);
 
+    const importItems = useCallback((items) => {
+        const normalized = items.map((item) => ({ ...normalizeItem(item), id: uuidv4() }));
+        if (!normalized.length) return;
+        saveItems([...(userData.itemsArray || []), ...normalized]);
+    }, [saveItems, userData.itemsArray]);
+
     const copyItemCode = useCallback(async () => {
-        if (selectedItem) await navigator.clipboard.writeText(JSON.stringify(selectedItem));
-    }, [selectedItem]);
+        const source = localItem || selectedItem;
+        if (!source) return;
+        const shareCode = buildShareCode('ITEM', normalizeItem(source));
+        await navigator.clipboard.writeText(shareCode);
+    }, [localItem, selectedItem]);
 
     const pasteItemCode = useCallback(async (e) => {
         e.preventDefault();
         try {
-            const itemCode = (await navigator.clipboard.readText()).trim();
-            const item = JSON.parse(itemCode);
-            saveItems([...(userData.itemsArray || []), { ...item, id: uuidv4() }]);
+            const text = await navigator.clipboard.readText();
+            const parsed = parseShareCode(text);
+            if (!parsed) return;
+            if (parsed.type && parsed.type !== 'ITEM') return;
+            const data = parsed.data ?? parsed;
+            const items = Array.isArray(data) ? data : [data];
+            importItems(items);
         } catch (err) {
             console.log('Erro ao colar o codigo do item!', err);
         }
-    }, [userData.itemsArray, saveItems]);
+    }, [importItems]);
 
     const isConsumableType = useCallback((value) => /^\s*(consumivel|consumiveis)\s*$/i.test(value || ''), []);
     const isConsumable = isConsumableType(localItem?.type);
@@ -210,7 +224,7 @@ export default function Page6() {
                         />
                         <div className="modal-actions">
                             <StyledButton variant="danger" onClick={deleteItem}>Deletar</StyledButton>
-                            <StyledButton onClick={copyItemCode}>Copiar</StyledButton>
+                            <StyledButton onClick={copyItemCode}>Copiar codigo</StyledButton>
                         </div>
                         </div>
                     </div>
@@ -237,7 +251,7 @@ export default function Page6() {
                                     />
                                     <div className="inventory-actions">
                                         <StyledButton onClick={addItem}>Criar Item</StyledButton>
-                                        <StyledButton onClick={pasteItemCode}>Colar Item</StyledButton>
+                                        <StyledButton onClick={pasteItemCode}>Importar codigo</StyledButton>
                                     </div>
                                 </div>
 
