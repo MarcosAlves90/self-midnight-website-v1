@@ -167,6 +167,7 @@ export default function Page6() {
                 {localItem ? (
                     <div className="inventory-modal">
                         <RetroModalHeader title="Editor de item" onClose={closeModal} />
+                        <div className="retro-modal__content">
                         <div className="inventory-modal__media">
                             <div className="inventory-modal__preview">
                                 <img src={localItem.image || placeHolderImage} alt="Item" />
@@ -210,6 +211,7 @@ export default function Page6() {
                         <div className="modal-actions">
                             <StyledButton variant="danger" onClick={deleteItem}>Deletar</StyledButton>
                             <StyledButton onClick={copyItemCode}>Copiar</StyledButton>
+                        </div>
                         </div>
                     </div>
                 ) : null}

@@ -84,7 +84,22 @@ export default function Page3() {
         const dice = [];
         let noAttribute = false;
 
-        const notify = (message, icon = '[ROLL]') => toast(message, { theme: 'dark', position: 'bottom-right', icon: () => icon });
+        const attrProgressMap = {
+            DES: 'var(--yellow-des)',
+            FOR: 'var(--red-for)',
+            INT: 'var(--blue-int)',
+            PRE: 'var(--purple-pre)',
+            VIG: 'var(--green-vig)',
+        };
+
+        const notify = (message, attrKey) => {
+            const progressColor = attrKey ? attrProgressMap[attrKey] : 'var(--retro-ink)';
+            toast(message, {
+                theme: 'dark',
+                position: 'bottom-right',
+                progressStyle: { background: progressColor },
+            });
+        };
 
         function rollSimpleDice(qty, sides) {
             for (let i = 0; i < qty; i++) dice.push(Math.floor(Math.random() * sides) + 1);
@@ -118,7 +133,7 @@ export default function Page3() {
             [noAttribute, attribute, attributeBonus] = verifyAttribute(attribute, attributeBonus);
             rollAttributeDice(attribute, attributeBonus);
             chooseMinOrMax(noAttribute);
-            notify(`${attributeName}: [${dice}] = ${diceResult}`);
+            notify(`${attributeName}: [${dice}] = ${diceResult}`, attributeName);
             setTempRoll({Pericia: attributeName, Dice: dice.join(', '), Result: diceResult});
             return;
         }
@@ -136,7 +151,7 @@ export default function Page3() {
             chooseMinOrMax(noAttribute);
             diceResult += periciaBonus;
             const result = diceResult + pericia;
-            notify(`${periciaName}: [${dice}] = ${result}`);
+            notify(`${periciaName}: [${dice}] = ${result}`, atrKey);
             setTempRoll({Pericia: periciaName, Dice: dice.join(', '), Result: result});
             return;
         }
@@ -158,7 +173,11 @@ export default function Page3() {
         const symbols = noStatusDice.match(symbolRegex) || [];
         const isolatedNumbers = noStatusDice.match(numberRegex)?.map(Number) || [];
 
-        const notify = (message) => toast(message, { theme: 'dark', position: 'bottom-right', icon: () => '[ROLL]' });
+        const notify = (message) => toast(message, {
+            theme: 'dark',
+            position: 'bottom-right',
+            progressStyle: { background: 'var(--retro-ink)' },
+        });
 
         if (!matches) return;
 
@@ -267,7 +286,18 @@ export default function Page3() {
                 description="Distribua pontos de biotipo, atributos e pericias com ferramentas de rolagem."
             />
             <RetroWindow title="Status">
-                <ToastContainer limit={5} closeOnClick />
+                <ToastContainer
+                    className="retro-toast-container"
+                    toastClassName="retro-toast"
+                    bodyClassName="retro-toast__body"
+                    progressClassName="retro-toast__progress"
+                    position="bottom-right"
+                    autoClose={3500}
+                    limit={5}
+                    newestOnTop
+                    closeOnClick
+                    pauseOnHover
+                />
 
                 <div className="page3-status">
                     <div className="page3-status__overview">

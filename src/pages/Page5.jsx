@@ -89,6 +89,7 @@ export default function Page5() {
                 {localItem ? (
                     <div className="annotation-modal">
                         <RetroModalHeader title="Editor de anotacao" onClose={closeModal} />
+                        <div className="retro-modal__content">
                         <label className="styled-field">
                             <span>Titulo</span>
                             <div className="styled-field__control">
@@ -114,6 +115,7 @@ export default function Page5() {
                         <div className="modal-actions">
                             <StyledButton variant="danger" onClick={handleDelete}>Deletar</StyledButton>
                             <StyledButton onClick={handleCopy}>Copiar</StyledButton>
+                        </div>
                         </div>
                     </div>
                 ) : null}

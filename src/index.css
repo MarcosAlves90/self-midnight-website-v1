@@ -372,6 +372,11 @@ label {
     border-top: 2px solid var(--retro-border-dark);
 }
 
+.retro-window-shell__content .retro-panel,
+.retro-window-shell__content .retro-card {
+    margin-bottom: 0;
+}
+
 .hero {
     display: flex;
     justify-content: center;
@@ -1298,7 +1303,6 @@ label {
 .inventory-modal {
     display: grid;
     gap: 1rem;
-    padding: 0.75rem 1rem 1.25rem;
 }
 
 .inventory-modal__media {
@@ -1583,6 +1587,11 @@ label {
 .annotation-modal {
     display: grid;
     gap: 1rem;
+}
+
+.retro-modal__content {
+    display: grid;
+    gap: 1rem;
     padding: 0.75rem 1rem 1.25rem;
 }
 
@@ -1848,4 +1857,52 @@ label {
         clip-path: inset(60% 0 0 0);
         transform: translate(0, 1px);
     }
+}
+
+.retro-toast-container {
+    width: min(360px, 92vw);
+    padding: 0.75rem;
+    z-index: 9999;
+    pointer-events: none;
+}
+
+.retro-toast {
+    background: var(--retro-surface);
+    border: 2px solid var(--retro-border-dark);
+    box-shadow: var(--retro-bevel-out);
+    color: var(--retro-ink);
+    font-family: var(--retro-font-mono);
+    letter-spacing: 0.02em;
+    border-radius: 0;
+    pointer-events: auto;
+}
+
+.retro-toast__body {
+    padding: 0.5rem 0.75rem;
+    display: flex;
+    align-items: flex-start;
+    gap: 0.5rem;
+    font-size: 0.85rem;
+    line-height: 1.4;
+}
+
+.retro-toast__progress {
+    background: var(--retro-accent);
+    height: 6px;
+}
+
+.Toastify__toast-icon {
+    width: auto;
+    margin-inline-end: 0.5rem;
+}
+
+.Toastify__close-button {
+    color: var(--retro-ink);
+    opacity: 1;
+}
+
+.Toastify__close-button:focus,
+.Toastify__close-button:hover {
+    color: var(--retro-ink);
+    opacity: 0.85;
 }

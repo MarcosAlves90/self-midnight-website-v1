@@ -128,6 +128,7 @@ export default function Page4() {
                 {localItem ? (
                     <div className="skill-modal">
                         <RetroModalHeader title="Editor de skill" onClose={closeModal} />
+                        <div className="retro-modal__content">
                         <div className="skill-modal__media">
                             <img src={localItem.image || placeHolderImage} alt="Skill" />
                             <div className="skill-modal__title">
@@ -172,6 +173,7 @@ export default function Page4() {
                         <div className="modal-actions">
                             <StyledButton variant="danger" onClick={handleDelete}>Deletar</StyledButton>
                             <StyledButton onClick={handleCopy}>Copiar</StyledButton>
+                        </div>
                         </div>
                     </div>
                 ) : null}
