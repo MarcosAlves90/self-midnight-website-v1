@@ -8,7 +8,6 @@ import { SidebarProvider } from './SidebarContext.jsx';
 import { getUserData } from './firebaseUtils';
 import { auth } from './firebase.js';
 import { UserContext } from './UserContext.jsx';
-import { decompressData } from './assets/systems/SaveLoad.jsx';
 
 const ROUTES_WITHOUT_NAVBAR = ['/fichas', '/'];
 
@@ -45,31 +44,27 @@ const ROUTES_CONFIG = [
 
 function App() {
     const location = useLocation();
-    const { userData, setUserData, setUser } = useContext(UserContext);
+    const { setUserData, setUser } = useContext(UserContext);
     const [isDataLoaded, setIsDataLoaded] = useState(false);
 
     const shouldShowNavBar = !ROUTES_WITHOUT_NAVBAR.includes(location.pathname);
 
-    const handleElementChange = useCallback((key) => (value) => {
-        setUserData((prevUserData) => ({
-            ...prevUserData,
-            [key]: value,
-        }));
-    }, [setUserData]);
-
     const fetchUserData = useCallback(async (isMounted) => {
         try {
-            let data = await getUserData('data');
+            const data = await getUserData('data');
+            if (!isMounted) return;
 
-            if (!data || !isMounted) return;
-
-            const decompressedData = decompressData(data);
-
-            if (!decompressedData.sheetCode) {
-                decompressedData.sheetCode = uuidv4();
+            if (!data) {
+                setUserData((prevUserData) => (
+                    prevUserData?.sheetCode
+                        ? prevUserData
+                        : { ...prevUserData, nivel: prevUserData?.nivel || 0, sheetCode: uuidv4() }
+                ));
+                setIsDataLoaded(true);
+                return;
             }
 
-            setUserData(decompressedData);
+            setUserData(data.sheetCode ? data : { ...data, sheetCode: uuidv4() });
             setIsDataLoaded(true);
         } catch (error) {
             console.error('Erro ao buscar dados do usuario:', error);
@@ -86,10 +81,11 @@ function App() {
                 await fetchUserData(isMounted);
             } else {
                 setUser(null);
-
-                if (!userData.sheetCode) {
-                    handleElementChange('sheetCode')(uuidv4());
-                }
+                setUserData((prevUserData) => (
+                    prevUserData?.sheetCode
+                        ? prevUserData
+                        : { ...prevUserData, nivel: prevUserData?.nivel || 0, sheetCode: uuidv4() }
+                ));
 
                 setIsDataLoaded(true);
             }
@@ -99,7 +95,7 @@ function App() {
             isMounted = false;
             unsubscribeAuth();
         };
-    }, [setUser, fetchUserData, userData.sheetCode, handleElementChange]);
+    }, [setUser, fetchUserData, setUserData]);
 
     if (!isDataLoaded) {
         return <LoadingFallback />;

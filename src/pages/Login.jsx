@@ -5,7 +5,6 @@ import { signInWithEmailAndPassword } from 'firebase/auth';
 import { getUserData, createUserData } from '../firebaseUtils.js';
 import { useNavigate } from 'react-router-dom';
 import validator from 'validator';
-import { decompressData } from '../assets/systems/SaveLoad.jsx';
 import { StyledButton, StyledTextField } from '../assets/systems/CommonComponents.jsx';
 import { RetroPage, RetroPanel, RetroWindow } from '../assets/components/RetroUI.jsx';
 import Seo from '../assets/components/Seo.jsx';
@@ -47,12 +46,13 @@ export default function Login() {
         try {
             setIsSubmitting(true);
             await signInWithEmailAndPassword(auth, trimmedEmail, trimmedPass);
-            let userData = await getUserData('data');
-            if (userData) {
-                userData = decompressData(userData);
-                setUserData(userData);
-            } else {
+            let cloudData = await getUserData('data');
+            if (!cloudData) {
                 await createUserData();
+                cloudData = await getUserData('data');
+            }
+            if (cloudData) {
+                setUserData(cloudData);
             }
             navigate('/individual');
         } catch (error) {
