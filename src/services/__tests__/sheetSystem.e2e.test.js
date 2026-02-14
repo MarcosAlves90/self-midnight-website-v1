@@ -79,7 +79,6 @@ describe('Sheet System E2E', () => {
         expect(inactive).toHaveLength(1);
         expect(inactive[0].sheetCode).toBe('inactive-1');
         expect(rootPayload.schemaVersion).toBe(2);
-        expect(Object.keys(rootPayload.sheetsMap)).toHaveLength(2);
     });
 
     it('keeps the same sheetCode while saving edits repeatedly', async () => {
@@ -151,5 +150,24 @@ describe('Sheet System E2E', () => {
         expect(activeAfter.sheetCode).toBe(active.sheetCode);
         expect(inactive).toHaveLength(1);
         expect(inactive[0].sheetCode).toBe('legacy-1');
+    });
+
+    it('does not resurrect deleted sheets from stale sheetsMap', async () => {
+        await createUserData();
+        const active = await getUserData('data');
+        const created = await createUserSheet('Temporaria');
+
+        firestoreState.docs.set(getRootDocPath(), {
+            ...firestoreState.docs.get(getRootDocPath()),
+            sheetsMap: {
+                [active.sheetCode]: active,
+                [created.sheetCode]: created,
+            },
+        });
+
+        await deleteUserSheet(created.sheetCode);
+        const afterDelete = await getUserData('sheets');
+
+        expect(afterDelete.some((sheet) => sheet.sheetCode === created.sheetCode)).toBe(false);
     });
 });

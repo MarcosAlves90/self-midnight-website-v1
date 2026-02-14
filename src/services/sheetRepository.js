@@ -84,8 +84,13 @@ const getSheetsFromPayload = (payload) => {
 
     const fromData = isObject(payload.data) ? [payload.data] : [];
     const fromSheets = Array.isArray(payload.sheets) ? payload.sheets.filter(isObject) : [];
+    const preferredSource = [...fromData, ...fromSheets];
+    if (preferredSource.length > 0) {
+        return dedupeByLatestUpdate(preferredSource, { hydrate: true });
+    }
+
     const fromMap = isObject(payload.sheetsMap) ? Object.values(payload.sheetsMap).filter(isObject) : [];
-    return dedupeByLatestUpdate([...fromData, ...fromSheets, ...fromMap], { hydrate: true });
+    return dedupeByLatestUpdate(fromMap, { hydrate: true });
 };
 
 const resolveActiveSheetId = (payload, sheets) => {
@@ -114,11 +119,6 @@ const buildWorkspace = (allSheets, activeSheetId) => {
     };
 };
 
-const buildSheetsMap = (allSheets) => {
-    const entries = allSheets.map((sheet) => [sheet.sheetCode, sheet]);
-    return Object.fromEntries(entries);
-};
-
 const persistWorkspace = async (userId, workspace, extraPatch = {}) => {
     const normalizedSheets = sortByUpdatedAtDesc(
         dedupeByLatestUpdate(workspace.allSheets, { hydrate: false }),
@@ -130,7 +130,7 @@ const persistWorkspace = async (userId, workspace, extraPatch = {}) => {
         activeSheetId: normalizedWorkspace.activeSheetId,
         data: normalizedWorkspace.activeSheet,
         sheets: normalizedWorkspace.inactiveSheets,
-        sheetsMap: buildSheetsMap(normalizedWorkspace.allSheets),
+        sheetsMap: null,
         updatedAt: now(),
         ...extraPatch,
     }, { merge: true });
@@ -148,11 +148,9 @@ const ensureWorkspace = async (userId) => {
 
     const activeSheetId = resolveActiveSheetId(rootPayload, allSheets);
     const workspace = buildWorkspace(allSheets, activeSheetId);
-    const hasMap = isObject(rootPayload.sheetsMap);
     const needsNormalization =
         rootPayload?.schemaVersion !== SCHEMA_VERSION ||
-        rootPayload?.activeSheetId !== workspace.activeSheetId ||
-        !hasMap;
+        rootPayload?.activeSheetId !== workspace.activeSheetId;
 
     if (needsNormalization) {
         return persistWorkspace(userId, workspace, { migratedAt: now() });

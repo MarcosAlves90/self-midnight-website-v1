@@ -13,6 +13,8 @@ import { StyledButton, StyledTextField } from '../assets/systems/CommonComponent
 import { RetroPage, RetroPanel, RetroCard, RetroWindow, RetroBadge } from '../assets/components/RetroUI.jsx';
 import Seo from '../assets/components/Seo.jsx';
 
+const SHEET_IMAGE_FALLBACK = '/images/rgPlaceholder.jpg';
+
 export default function SheetSelectionPage() {
     const [sheets, setSheets] = useState([]);
     const [newSheetName, setNewSheetName] = useState('');
@@ -31,6 +33,18 @@ export default function SheetSelectionPage() {
             hour: '2-digit',
             minute: '2-digit',
         });
+    }, []);
+
+    const resolveSheetImage = useCallback((sheet) => {
+        if (!sheet || typeof sheet.profilePic !== 'string') return SHEET_IMAGE_FALLBACK;
+        const normalized = sheet.profilePic.trim();
+        return normalized || SHEET_IMAGE_FALLBACK;
+    }, []);
+
+    const handleImageError = useCallback((event) => {
+        const image = event.currentTarget;
+        if (image.src.endsWith(SHEET_IMAGE_FALLBACK)) return;
+        image.src = SHEET_IMAGE_FALLBACK;
     }, []);
 
     const loadSheets = useCallback(async () => {
@@ -139,10 +153,30 @@ export default function SheetSelectionPage() {
                                     ) : (
                                         sortedSheets.map((sheet) => (
                                             <RetroCard key={sheet.sheetCode} className="sheet-card">
-                                                <div className="sheet-card__content">
-                                                    <p className="sheet-card__title">{sheet.nome || sheet.sheetCode}</p>
-                                                    <p className="sheet-card__meta">{sheet.sheetCode}</p>
-                                                    <p className="sheet-card__meta">Atualizado: {formatUpdatedAt(sheet.updatedAt)}</p>
+                                                <div className="sheet-card__layout">
+                                                    <div className="sheet-card__media">
+                                                        <img
+                                                            src={resolveSheetImage(sheet)}
+                                                            onError={handleImageError}
+                                                            alt={`Retrato da ficha ${sheet.nome || sheet.sheetCode}`}
+                                                        />
+                                                    </div>
+                                                    <div className="sheet-card__body">
+                                                        <div className="sheet-card__head">
+                                                            <p className="sheet-card__title">{sheet.nome || sheet.sheetCode}</p>
+                                                            <RetroBadge>{`Nivel ${sheet.nivel || 0}`}</RetroBadge>
+                                                        </div>
+                                                        <div className="sheet-card__content">
+                                                            <p className="sheet-card__meta">
+                                                                <span className="sheet-card__meta-label">Codigo</span>
+                                                                <span className="sheet-card__meta-value">{sheet.sheetCode}</span>
+                                                            </p>
+                                                            <p className="sheet-card__meta">
+                                                                <span className="sheet-card__meta-label">Atualizado</span>
+                                                                <span className="sheet-card__meta-value">{formatUpdatedAt(sheet.updatedAt)}</span>
+                                                            </p>
+                                                        </div>
+                                                    </div>
                                                 </div>
                                                 <div className="sheet-card__actions">
                                                     <StyledButton onClick={() => switchSheet(sheet.sheetCode)} disabled={isWorking}>Selecionar</StyledButton>
