@@ -7,6 +7,7 @@ import {UserContext} from '../UserContext.jsx';
 import {StyledButton, StyledTextField} from '../assets/systems/CommonComponents.jsx';
 import { RetroPage, RetroPanel, RetroBadge, RetroWindow } from '../assets/components/RetroUI.jsx';
 import { useDebouncedCloudSave } from '../assets/systems/useDebouncedCloudSave.js';
+import Seo from '../assets/components/Seo.jsx';
 
 export default function Page3() {
     const [totalPoints, setTotalPoints] = useState({ bioPoints: 0, atrPoints: 0, perPoints: 0, arcPoints: 0, subArcPoints: 0 });
@@ -281,6 +282,10 @@ export default function Page3() {
 
     return (
         <RetroPage>
+            <Seo
+                title="Status"
+                description="Distribua pontos de biotipo, atributos, pericias e artes com ferramentas de rolagem."
+            />
             <RetroWindow title="Status">
                 <ToastContainer limit={5} closeOnClick />
 
@@ -298,7 +303,7 @@ export default function Page3() {
                             </div>
                         </RetroPanel>
 
-                        <RetroPanel title="Painel rapido">
+                        <RetroPanel title="Painel rápido">
                             <div className="status-quick">
                                 <div className="status-quick__actions">
                                     <StyledButton onClick={handleLockChange}>{userData.isLocked ? 'Bloqueado [LOCK]' : 'Desbloqueado [OPEN]'}</StyledButton>

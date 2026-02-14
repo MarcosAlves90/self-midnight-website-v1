@@ -7,6 +7,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { decompressData } from '../assets/systems/SaveLoad.jsx';
 import { StyledButton } from '../assets/systems/CommonComponents.jsx';
 import { RetroPage, RetroPanel, RetroCard, RetroWindow } from '../assets/components/RetroUI.jsx';
+import Seo from '../assets/components/Seo.jsx';
 
 export default function Config() {
     const [unlockedStates, setUnlockedStates] = useState({ Delete: false, CloudSave: false });
@@ -77,7 +78,11 @@ export default function Config() {
 
     return (
         <RetroPage>
-            <RetroWindow title="Config">
+            <Seo
+                title="Configurações"
+                description="Importe, exporte e gerencie backups da sua ficha."
+            />
+            <RetroWindow title="Configurações">
                 <RetroPanel title="Ficha ativa">
                     <div className="config-grid">
                         <RetroCard className="config-card">
@@ -127,4 +132,3 @@ export default function Config() {
         </RetroPage>
     );
 }
-

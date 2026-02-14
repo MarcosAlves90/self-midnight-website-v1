@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://tmwcse.vercel.app/sitemap.xml

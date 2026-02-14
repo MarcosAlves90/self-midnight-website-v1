@@ -6,6 +6,7 @@ import { StyledButton, StyledTextField } from '../assets/systems/CommonComponent
 import ReactModal from 'react-modal';
 import { RetroPage, RetroPanel, RetroCard, RetroBadge, RetroModalHeader, RetroWindow } from '../assets/components/RetroUI.jsx';
 import { useDebouncedCloudSave } from '../assets/systems/useDebouncedCloudSave.js';
+import Seo from '../assets/components/Seo.jsx';
 
 ReactModal.setAppElement('#root');
 
@@ -140,7 +141,7 @@ export default function Page4() {
                                     value={localItem.domain || ''}
                                     name="domain"
                                     onChange={handleInputChange}
-                                    label="Dominios"
+                                    label="Domínios"
                                     helperText="Separe por virgula para facilitar os filtros."
                                 />
                             </div>
@@ -164,7 +165,7 @@ export default function Page4() {
                             value={localItem.content || ''}
                             name="content"
                             onChange={handleInputChange}
-                            label="Descricao"
+                            label="Descrição"
                             placeholder="Descreva efeitos, custo e exemplos de uso."
                         />
                         <StyledTextField value={localItem.image || ''} name="image" onChange={handleInputChange} label="Link da imagem" />
@@ -177,7 +178,11 @@ export default function Page4() {
             </ReactModal>
 
             <RetroPage>
-                <RetroWindow title="Catalogo">
+                <Seo
+                    title="Skills"
+                    description="Crie, edite e categorize habilidades do personagem com filtros por dominio."
+                />
+                <RetroWindow title="Skills">
                     <RetroPanel title="Skills">
                         <div className="library-panel">
                             <div className="library-header">
@@ -227,7 +232,7 @@ export default function Page4() {
                                     </div>
                                     <div className="library-card__content">
                                         <p className="library-card__title">{skill.title || 'Sem titulo'}</p>
-                                        <p className="library-card__meta">{skill.domain || 'Sem dominios'}</p>
+                                        <p className="library-card__meta">{skill.domain || 'Sem domínios'}</p>
                                     </div>
                                 </RetroCard>
                             ))}

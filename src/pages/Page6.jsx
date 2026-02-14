@@ -6,6 +6,7 @@ import { UserContext } from '../UserContext';
 import { StyledButton, StyledTextField } from '../assets/systems/CommonComponents.jsx';
 import { RetroPage, RetroPanel, RetroCard, RetroBadge, RetroModalHeader, RetroWindow } from '../assets/components/RetroUI.jsx';
 import { useDebouncedCloudSave } from '../assets/systems/useDebouncedCloudSave.js';
+import Seo from '../assets/components/Seo.jsx';
 
 ReactModal.setAppElement('#root');
 
@@ -203,7 +204,7 @@ export default function Page6() {
                             value={localItem.content || ''}
                             name="content"
                             onChange={handleInputChange}
-                            label="Descricao"
+                            label="Descrição"
                             placeholder="Descreva o item, origem e efeitos."
                         />
                         <div className="modal-actions">
@@ -215,8 +216,12 @@ export default function Page6() {
             </ReactModal>
 
             <RetroPage>
-                <RetroWindow title="Economia">
-                    <RetroPanel title="Inventario">
+                <Seo
+                    title="Inventário"
+                    description="Gerencie itens, categorias e moedas do personagem com filtros e busca."
+                />
+                <RetroWindow title="Inventário">
+                    <RetroPanel title="Inventário">
                         <div className="inventory-panel">
                             <div className="inventory-header">
                                 <div className="inventory-create">
@@ -261,7 +266,7 @@ export default function Page6() {
                                 <StyledTextField
                                     type="text"
                                     label="Pesquisar"
-                                    placeholder="Buscar por titulo, descricao ou categoria..."
+                                    placeholder="Buscar por titulo, descrição ou categoria..."
                                     value={searchTerm}
                                     onChange={(event) => setSearchTerm(event.target.value)}
                                     fullWidth

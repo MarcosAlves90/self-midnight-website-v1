@@ -8,6 +8,7 @@ import validator from 'validator';
 import { decompressData } from '../assets/systems/SaveLoad.jsx';
 import { StyledButton, StyledTextField } from '../assets/systems/CommonComponents.jsx';
 import { RetroPage, RetroPanel, RetroWindow } from '../assets/components/RetroUI.jsx';
+import Seo from '../assets/components/Seo.jsx';
 
 const validateEmail = (email) => validator.isEmail(email);
 const validatePassword = (password) =>
@@ -64,8 +65,13 @@ export default function Login() {
 
     return (
         <RetroPage>
+            <Seo
+                title="Login"
+                description="Acesse sua ficha online com autenticação segura."
+                noIndex
+            />
             <RetroWindow title="Login">
-                <RetroPanel title="Autenticacao do terminal">
+                <RetroPanel title="Autenticação do terminal">
                     <div className="login-panel">
                         <header className="login-header">
                             <p className="login-eyebrow">Rossiiskaia Access</p>
@@ -75,22 +81,22 @@ export default function Login() {
 
                         <form id="login-form" className="login-form" onSubmit={handleLogin}>
                             <StyledTextField
-                                label="Usuario"
+                                label="Usuário"
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
                                 helperText="Use o email cadastrado."
                                 fullWidth
                             />
-                            {emailError ? <p className="login-error">Email invalido.</p> : null}
+                            {emailError ? <p className="login-error">Email inválido.</p> : null}
                             <StyledTextField
                                 label="Senha"
                                 type="password"
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
-                                helperText="Minimo 6 caracteres."
+                                helperText="Mínimo 6 caracteres."
                                 fullWidth
                             />
-                            {passwordError ? <p className="login-error">Senha invalida.</p> : null}
+                            {passwordError ? <p className="login-error">Senha inválida.</p> : null}
                             {formError ? <p className="login-error login-error--global">{formError}</p> : null}
                             <div className="login-actions">
                                 <StyledButton type="submit" disabled={isSubmitting}>

@@ -7,6 +7,7 @@ import MentalWorldSection from './Page1/MentalWorldSection.jsx';
 import VitalResourcesSection from './Page1/VitalResourcesSection.jsx';
 import ProgressionSection from './Page1/ProgressionSection.jsx';
 import { RetroPage } from '../assets/components/RetroUI.jsx';
+import Seo from '../assets/components/Seo.jsx';
 
 export default function Page1() {
     const {userData, setUserData, user} = useContext(UserContext);
@@ -62,6 +63,10 @@ export default function Page1() {
 
     return (
         <RetroPage>
+            <Seo
+                title="Identidade"
+                description="Perfil do operador com dados pessoais, recursos e progresso do personagem."
+            />
             <section className="page1-console">
                 <div className="page1-console__window retro-window">
                     <header className="retro-titlebar">
@@ -86,7 +91,7 @@ export default function Page1() {
                                         <p><strong>Titulo:</strong> {operatorTitle}</p>
                                     </div>
                                     <div>
-                                        <p><strong>Nivel:</strong> {operatorLevel}</p>
+                                        <p><strong>Nível:</strong> {operatorLevel}</p>
                                         <p><strong>Regime:</strong> Campo ativo</p>
                                     </div>
                                 </div>
@@ -112,5 +117,4 @@ export default function Page1() {
         </RetroPage>
     );
 }
-
 

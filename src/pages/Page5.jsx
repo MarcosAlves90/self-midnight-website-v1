@@ -6,6 +6,7 @@ import { StyledButton, StyledTextField } from '../assets/systems/CommonComponent
 import ReactModal from 'react-modal';
 import { RetroPage, RetroPanel, RetroCard, RetroModalHeader, RetroWindow } from '../assets/components/RetroUI.jsx';
 import { useDebouncedCloudSave } from '../assets/systems/useDebouncedCloudSave.js';
+import Seo from '../assets/components/Seo.jsx';
 
 ReactModal.setAppElement('#root');
 
@@ -119,20 +120,24 @@ export default function Page5() {
             </ReactModal>
 
             <RetroPage>
-                <RetroWindow title="Anotacoes">
-                    <RetroPanel title="Anotacoes">
+                <Seo
+                    title="Anotações"
+                    description="Registre pistas, ideias e historias em um painel de anotações organizado."
+                />
+                <RetroWindow title="Anotações">
+                    <RetroPanel title="Anotações">
                         <div className="library-panel">
                             <div className="library-header">
                                 <StyledTextField
                                     type="text"
-                                    label="Nova anotacao"
-                                    placeholder="Titulo da anotacao..."
+                                    label="Nova anotação"
+                                    placeholder="Titulo da anotação..."
                                     value={createTitle}
                                     onChange={(event) => setCreateTitle(event.target.value)}
                                     fullWidth
                                 />
                                 <div className="library-actions">
-                                    <StyledButton onClick={handleCreateAnnotation}>Criar Anotacao</StyledButton>
+                                    <StyledButton onClick={handleCreateAnnotation}>Criar Anotação</StyledButton>
                                 </div>
                             </div>
 
@@ -140,13 +145,13 @@ export default function Page5() {
                                 <StyledTextField
                                     type="text"
                                     label="Pesquisar"
-                                    placeholder="Buscar por titulo ou conteudo..."
+                                    placeholder="Buscar por titulo ou conteúdo..."
                                     value={searchTerm}
                                     onChange={(event) => setSearchTerm(event.target.value)}
                                     fullWidth
                                 />
                                 <div className="library-tags">
-                                    <span className="library-count">{annotationCount} anotacoes</span>
+                                    <span className="library-count">{annotationCount} anotações</span>
                                 </div>
                             </div>
                         </div>
@@ -155,11 +160,11 @@ export default function Page5() {
                             {(filteredAnnotations || []).map((annotation) => (
                                 <RetroCard key={annotation.id} onClick={() => openModal(annotation)} className="library-card">
                                     <div className="library-card__media">
-                                        <img src={placeHolderImage} alt="Anotacao" />
+                                        <img src={placeHolderImage} alt="Anotação" />
                                     </div>
                                     <div className="library-card__content">
                                         <p className="library-card__title">{annotation.title || 'Sem titulo'}</p>
-                                        <p className="library-card__meta">{(annotation.content || '').slice(0, 90) || 'Sem conteudo'}</p>
+                                        <p className="library-card__meta">{(annotation.content || '').slice(0, 90) || 'Sem conteúdo'}</p>
                                     </div>
                                 </RetroCard>
                             ))}

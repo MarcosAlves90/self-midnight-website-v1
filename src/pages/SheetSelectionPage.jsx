@@ -7,6 +7,7 @@ import { useNavigate } from 'react-router-dom';
 import { decompressData } from '../assets/systems/SaveLoad.jsx';
 import { StyledButton, StyledTextField } from '../assets/systems/CommonComponents.jsx';
 import { RetroPage, RetroPanel, RetroCard, RetroWindow, RetroBadge } from '../assets/components/RetroUI.jsx';
+import Seo from '../assets/components/Seo.jsx';
 
 export default function SheetSelectionPage() {
     const [sheets, setSheets] = useState([]);
@@ -62,7 +63,7 @@ export default function SheetSelectionPage() {
     }, [newSheetName, sheets]);
 
     const deleteSheet = useCallback((sheetCode) => {
-        if (!window.confirm('Quer mesmo deletar essa ficha? Esse processo e irreversivel.')) return;
+        if (!window.confirm('Quer mesmo deletar essa ficha? Esse processo e irreversível.')) return;
         const updatedSheets = sheets.filter((sheet) => sheet.sheetCode !== sheetCode);
         saveUserSheets(updatedSheets);
         setSheets(updatedSheets);
@@ -91,8 +92,13 @@ export default function SheetSelectionPage() {
 
     return (
         <RetroPage title="Gestor de Fichas" subtitle="Selecione, crie ou remova perfis de personagem">
-            <RetroWindow title="Gestao de Perfis // Fichas" status="Repositorio ativo :: Sincronizacao habilitada">
-                <RetroPanel title="Selecao de fichas">
+            <Seo
+                title="Fichas"
+                description="Selecione, crie e organize fichas de personagem salvas na nuvem."
+                noIndex
+            />
+            <RetroWindow title="Gestão de Perfis // Fichas" status="Repositório ativo :: Sincronização habilitada">
+                <RetroPanel title="Seleção de fichas">
                     {loading ? (
                         <p>Carregando fichas...</p>
                     ) : (

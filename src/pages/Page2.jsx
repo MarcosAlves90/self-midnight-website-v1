@@ -3,6 +3,7 @@ import { saveUserData } from '../firebaseUtils.js';
 import { UserContext } from '../UserContext';
 import { StyledTextField } from '../assets/systems/CommonComponents.jsx';
 import { RetroPage, RetroPanel, RetroWindow } from '../assets/components/RetroUI.jsx';
+import Seo from '../assets/components/Seo.jsx';
 
 export default function Page2() {
     const { userData, setUserData, user } = useContext(UserContext);
@@ -60,7 +61,11 @@ export default function Page2() {
 
     return (
         <RetroPage>
-            <RetroWindow title="Caracteristicas">
+            <Seo
+                title="Características"
+                description="Detalhes de origem, aparência, ideais e traços do personagem."
+            />
+            <RetroWindow title="Características">
                 <div className="page2-characteristics">
                     <div className="page2-characteristics__grid">
                         {characterSections.map((section) => (
@@ -93,7 +98,7 @@ export default function Page2() {
                                 minRows={4}
                                 label="Tracos negativos"
                                 placeholder="Limites, falhas e manias."
-                                helperText="Vicios, medos, impulsos e conflitos internos."
+                                helperText="Vícios, medos, impulsos e conflitos internos."
                                 value={userData.tracosNegativos || ''}
                                 onChange={handleInputChange('tracosNegativos')}
                             />
@@ -104,5 +109,4 @@ export default function Page2() {
         </RetroPage>
     );
 }
-
 
