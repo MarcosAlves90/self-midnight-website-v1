@@ -48,6 +48,34 @@
     --color-imagination: #facc15;
     --color-modification: #22c55e;
     --color-creation: #60a5fa;
+    --retro-body-gradient: radial-gradient(circle at top, #18223a 0%, #0a0f1b 60%, #05070f 100%);
+}
+
+:root[data-theme='dark'] {
+    color-scheme: dark;
+    --retro-bg: #05070f;
+    --retro-bg-2: #0b111f;
+    --retro-surface: #2a3242;
+    --retro-surface-light: #1f2736;
+    --retro-surface-dark: #141b28;
+    --retro-border-dark: #0a0f17;
+    --retro-border-light: #4c5a73;
+    --retro-ink: #eef3ff;
+    --retro-ink-soft: #c3cfdf;
+    --retro-accent: #d5a73e;
+    --retro-accent-strong: #edc668;
+    --retro-blue: #324f79;
+    --retro-blue-strong: #6f9bda;
+    --retro-green: #45e68a;
+    --retro-green-dark: #239459;
+    --retro-dots: rgba(255, 255, 255, 0.12);
+    --retro-shadow: 0 16px 34px rgba(0, 0, 0, 0.55);
+    --yellow-des: #f9d95f;
+    --red-for: #e86a60;
+    --blue-int: #62a0f0;
+    --purple-pre: #9e90ea;
+    --green-vig: #54d08a;
+    --retro-body-gradient: radial-gradient(circle at top, #111a30 0%, #090e1a 56%, #04070e 100%);
 }
 
 *,
@@ -61,7 +89,7 @@ body {
     min-height: 100vh;
     font-family: var(--retro-font-body);
     color: var(--retro-ink);
-    background: radial-gradient(circle at top, #18223a 0%, #0a0f1b 60%, #05070f 100%);
+    background: var(--retro-body-gradient);
 }
 
 #root {
@@ -1375,6 +1403,17 @@ label {
 .config-panel {
     display: grid;
     gap: 1.25rem;
+}
+
+.config-theme {
+    display: grid;
+    gap: 0.75rem;
+}
+
+.config-theme__toggles {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.6rem;
 }
 
 .config-actions {

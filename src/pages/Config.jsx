@@ -1,16 +1,23 @@
 import { saveUserData } from '../firebaseUtils.js';
-import { useState, useContext, useCallback, useRef } from 'react';
+import { useState, useContext, useCallback, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { auth } from '../firebase.js';
 import { UserContext } from '../UserContext';
 import { v4 as uuidv4 } from 'uuid';
 import { decompressData } from '../assets/systems/SaveLoad.jsx';
 import { StyledButton } from '../assets/systems/CommonComponents.jsx';
-import { RetroPage, RetroPanel, RetroCard, RetroWindow } from '../assets/components/RetroUI.jsx';
+import { RetroPage, RetroPanel, RetroCard, RetroWindow, RetroBadge } from '../assets/components/RetroUI.jsx';
 import Seo from '../assets/components/Seo.jsx';
+import {
+    THEME_DARK,
+    THEME_LIGHT,
+    getCurrentThemePreference,
+    setThemePreference,
+} from '../assets/systems/themeUtils.js';
 
 export default function Config() {
     const [unlockedStates, setUnlockedStates] = useState({ Delete: false, CloudSave: false });
+    const [themePreference, setThemePreferenceState] = useState(() => getCurrentThemePreference());
     const { userData, setUserData, user } = useContext(UserContext);
     const navigate = useNavigate();
     const fileInputRef = useRef(null);
@@ -76,6 +83,15 @@ export default function Config() {
         }
     }, [userData]);
 
+    const handleThemeChange = useCallback((nextTheme) => {
+        const applied = setThemePreference(nextTheme);
+        setThemePreferenceState(applied);
+    }, []);
+
+    useEffect(() => {
+        setThemePreferenceState(getCurrentThemePreference());
+    }, []);
+
     return (
         <RetroPage>
             <Seo
@@ -125,6 +141,20 @@ export default function Config() {
                             <StyledButton variant="danger" onClick={verifyDeleteUnlock}>
                                 {!unlockedStates.Delete ? 'Limpar ficha' : 'Confirmar limpeza'}
                             </StyledButton>
+                        </div>
+                    </div>
+                </RetroPanel>
+
+                <RetroPanel title="Aparencia">
+                    <div className="config-theme">
+                        <p className="config-card__meta">Selecione o tema visual do site.</p>
+                        <div className="config-theme__toggles">
+                            <RetroBadge active={themePreference === THEME_LIGHT} onClick={() => handleThemeChange(THEME_LIGHT)}>
+                                Tema Claro
+                            </RetroBadge>
+                            <RetroBadge active={themePreference === THEME_DARK} onClick={() => handleThemeChange(THEME_DARK)}>
+                                Tema Escuro
+                            </RetroBadge>
                         </div>
                     </div>
                 </RetroPanel>

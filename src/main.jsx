@@ -5,6 +5,9 @@ import 'react-toastify/dist/ReactToastify.css';
 import './index.css';
 import {BrowserRouter} from 'react-router-dom';
 import {UserProvider} from './UserContext.jsx';
+import { bootstrapThemePreference } from './assets/systems/themeUtils.js';
+
+bootstrapThemePreference();
 
 ReactDOM.createRoot(document.getElementById('root')).render(
     <StrictMode>
