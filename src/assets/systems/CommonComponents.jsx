@@ -33,14 +33,6 @@ StyledTextField.propTypes = {
     className: PropTypes.string,
 };
 
-export function StyledFormControl({ children }) {
-    return <div>{children}</div>;
-}
-
-StyledFormControl.propTypes = {
-    children: PropTypes.node,
-};
-
 export function StyledButton({
     startIcon,
     endIcon,

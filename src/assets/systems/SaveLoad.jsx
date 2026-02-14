@@ -77,12 +77,8 @@ export function decompressData(obj) {
     return recursivelyProcess(obj);
 }
 
-export const clearLocalStorage = () => {
+const clearLocalStorage = () => {
     localStorage.clear();
-};
-
-export const returnLocalStorageData = () => {
-    return Object.fromEntries([...Array(localStorage.length).keys()].map(i => [localStorage.key(i), localStorage.getItem(localStorage.key(i))]));
 };
 
 export const useSignOut = () => {

@@ -60,22 +60,6 @@ export const bioMap = ['Vida', 'Energia', 'Pericias', 'Cromos'];
  */
 export const atrMap = ['DES', 'FOR', 'INT', 'PRE', 'VIG'];
 
-export const arcArray = [
-    { art: "DES" },
-    { art: "LEV" },
-    { art: "LIB" },
-    { art: "MAN" },
-    { art: "IMA" },
-    { art: "MOD" },
-    { art: "CRI" },
-];
 
-export const subArcArray = [
-    {subArt: "Anulação", art: "DES"},
-    {subArt: "Percepção", art: "LEV"},
-    {subArt: "Absorção", art: "LIB"},
-    {subArt: "Ilusão", art: "IMA"},
-    {subArt: "Fusão", art: "MOD"},
-    {subArt: "Multiplicação", art: "CRI"},
-]
+
 

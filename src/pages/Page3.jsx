@@ -1,6 +1,6 @@
 import {useCallback, useEffect, useState, useMemo, useContext} from 'react';
-import {ArtsSection, Attributes, Biotipos, PericiasSection, SubArtsSection} from '../assets/systems/FichaPage3/FichaPage3System.jsx';
-import {arcArray, atrMap, bioMap, perArray, subArcArray} from '../assets/systems/FichaPage3/FichaPage3Arrays.jsx';
+import {Attributes, Biotipos, PericiasSection} from '../assets/systems/FichaPage3/FichaPage3System.jsx';
+import {atrMap, bioMap, perArray} from '../assets/systems/FichaPage3/FichaPage3Arrays.jsx';
 import {saveUserData} from '../firebaseUtils.js';
 import {ToastContainer, toast} from 'react-toastify';
 import {UserContext} from '../UserContext.jsx';
@@ -10,7 +10,7 @@ import { useDebouncedCloudSave } from '../assets/systems/useDebouncedCloudSave.j
 import Seo from '../assets/components/Seo.jsx';
 
 export default function Page3() {
-    const [totalPoints, setTotalPoints] = useState({ bioPoints: 0, atrPoints: 0, perPoints: 0, arcPoints: 0, subArcPoints: 0 });
+    const [totalPoints, setTotalPoints] = useState({ bioPoints: 0, atrPoints: 0, perPoints: 0 });
     const [recommendations, setRecommendations] = useState(false);
     const [tempRoll, setTempRoll] = useState({ Pericia: '', Dice: '', Result: 0 });
     const [noStatusDice, setNoStatusDice] = useState('');
@@ -19,7 +19,7 @@ export default function Page3() {
     useDebouncedCloudSave(userData, Boolean(user), saveUserData);
 
     const calculateTotalPoints = useCallback(() => {
-        const newTotalPoints = { bioPoints: 0, atrPoints: 0, perPoints: 0, arcPoints: 0, subArcPoints: 0 };
+        const newTotalPoints = { bioPoints: 0, atrPoints: 0, perPoints: 0 };
         Object.keys(userData).forEach((key) => {
             const value = parseFloat(userData[key]);
             const validValue = Number.isNaN(value) ? 0 : value;
@@ -27,8 +27,6 @@ export default function Page3() {
                 if (key.startsWith('biotipo-')) newTotalPoints.bioPoints += validValue;
                 else if (key.startsWith('atributo-')) newTotalPoints.atrPoints += validValue;
                 else if (key.startsWith('pericia-')) newTotalPoints.perPoints += validValue;
-                else if (key.startsWith('art-')) newTotalPoints.arcPoints += validValue;
-                else if (key.startsWith('subArt-')) newTotalPoints.subArcPoints += validValue;
             }
         });
         setTotalPoints(newTotalPoints);
@@ -226,9 +224,6 @@ export default function Page3() {
     const filteredBioMap = useMemo(() => bioMap.filter((item) => item.toLowerCase().includes(searchTerm)), [searchTerm]);
     const filteredAtrMap = useMemo(() => atrMap.filter((item) => item.toLowerCase().includes(searchTerm)), [searchTerm]);
     const filteredPerArray = useMemo(() => perArray.filter((item) => item.pericia.toLowerCase().includes(searchTerm)), [searchTerm]);
-    const filteredArcArray = useMemo(() => arcArray.filter((item) => item.art.toLowerCase().includes(searchTerm)), [searchTerm]);
-    const filteredSubArcArray = useMemo(() => subArcArray.filter((item) => item.subArt.toLowerCase().includes(searchTerm)), [searchTerm]);
-
     const periciaHeaderValue = useMemo(() => {
         if (!userData.nivel || userData.nivel === '' || Number.isNaN(userData.nivel)) return 'Verifique seu nivel';
         const periciasPoints = calculatePericiasPoints();
@@ -237,7 +232,6 @@ export default function Page3() {
         return 'Biotipo invalido';
     }, [userData.nivel, calculatePericiasPoints]);
 
-    const arcCap = (userData['pericia-Magia Arcana'] || 0) * 5;
     const statusSummary = useMemo(() => ([
         {
             id: 'bio',
@@ -260,21 +254,7 @@ export default function Page3() {
             cap: periciaHeaderValue,
             accent: 'var(--color-per)',
         },
-        {
-            id: 'art',
-            label: 'Artes',
-            value: totalPoints.arcPoints,
-            cap: arcCap,
-            accent: 'var(--color-creation)',
-        },
-        {
-            id: 'subart',
-            label: 'Subartes',
-            value: totalPoints.subArcPoints,
-            cap: arcCap,
-            accent: 'var(--color-imagination)',
-        },
-    ]), [arcCap, calculateAttributesPoints, periciaHeaderValue, totalPoints]);
+    ]), [calculateAttributesPoints, periciaHeaderValue, totalPoints]);
 
     const lastRollLabel = tempRoll.Pericia || 'Nenhuma';
     const lastRollDice = tempRoll.Dice ? `${tempRoll.Dice.slice(0, 60)}${tempRoll.Dice.length > 60 ? '...' : ''}` : '-';
@@ -284,7 +264,7 @@ export default function Page3() {
         <RetroPage>
             <Seo
                 title="Status"
-                description="Distribua pontos de biotipo, atributos, pericias e artes com ferramentas de rolagem."
+                description="Distribua pontos de biotipo, atributos e pericias com ferramentas de rolagem."
             />
             <RetroWindow title="Status">
                 <ToastContainer limit={5} closeOnClick />
@@ -324,7 +304,6 @@ export default function Page3() {
                                         <RetroBadge>Cap biotipo: 3</RetroBadge>
                                         <RetroBadge>Cap atributos: {calculateAttributesCap()}</RetroBadge>
                                         <RetroBadge>Cap pericias: {calculatePericiasCap()}</RetroBadge>
-                                        <RetroBadge>Cap artes e subartes: 15</RetroBadge>
                                     </div>
                                 ) : null}
 
@@ -369,18 +348,6 @@ export default function Page3() {
                 {filteredPerArray.length > 0 ? (
                     <RetroPanel title={`Pericias [${totalPoints.perPoints}/${periciaHeaderValue}]`}>
                         <PericiasSection rollDice={rollDice} handleInputChange={handleInputChange} perArray={filteredPerArray} />
-                    </RetroPanel>
-                ) : null}
-
-                {filteredArcArray.length > 0 ? (
-                    <RetroPanel title={`Artes [${totalPoints.arcPoints}/${arcCap}]`}>
-                        <ArtsSection handleInputChange={handleInputChange} arcArray={filteredArcArray} />
-                    </RetroPanel>
-                ) : null}
-
-                {filteredSubArcArray.length > 0 ? (
-                    <RetroPanel title={`Subartes [${totalPoints.subArcPoints}/${arcCap}]`}>
-                        <SubArtsSection handleInputChange={handleInputChange} subArcArray={filteredSubArcArray} />
                     </RetroPanel>
                 ) : null}
             </RetroWindow>

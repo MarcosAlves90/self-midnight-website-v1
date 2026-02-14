@@ -31,13 +31,4 @@ export const bioColors = {
     "Cromos" : {"background" : "var(--color-cromo)", "color" : "white"},
 }
 
-export const arcColors = {
-    "DES": {"background": "var(--color-destruction)", "color" : "white"},
-    "LEV": {"background": "var(--color-levitation)", "color" : "black"},
-    "LIB": {"background": "var(--color-release)", "color" : "white"},
-    "MAN": {"background": "var(--color-manipulation)", "color" : "black"},
-    "IMA": {"background": "var(--color-imagination)", "color" : "white"},
-    "MOD": {"background": "var(--color-modification)", "color" : "black"},
-    "CRI": {"background": "var(--color-creation)", "color" : "black"},
-}
 

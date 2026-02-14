@@ -1,6 +1,6 @@
 import PropTypes from 'prop-types';
 import { useContext } from 'react';
-import { arcColors, atrColors, bioColors } from '../../styles/CommonStyles.jsx';
+import { atrColors, bioColors } from '../../styles/CommonStyles.jsx';
 import { UserContext } from '../../../UserContext.jsx';
 
 const perArrayPropType = PropTypes.arrayOf(
@@ -10,18 +10,6 @@ const perArrayPropType = PropTypes.arrayOf(
     })
 );
 
-const arcArrayPropType = PropTypes.arrayOf(
-    PropTypes.shape({
-        art: PropTypes.string.isRequired,
-    })
-);
-
-const subArcArrayPropType = PropTypes.arrayOf(
-    PropTypes.shape({
-        subArt: PropTypes.string.isRequired,
-        art: PropTypes.string.isRequired,
-    })
-);
 
 function handleKeyPress(event) {
     if (event.ctrlKey && (event.key === 'a' || event.key === 'c')) return;
@@ -177,101 +165,4 @@ Pericia.propTypes = {
     rollDice: PropTypes.func.isRequired,
 };
 
-export function ArtsSection({ handleInputChange, arcArray }) {
-    return (
-        <div className="status-grid status-grid--arts">
-            {arcArray.map(({ art }) => (
-                <ArcaneArts art={art} key={art} handleInputChange={handleInputChange} />
-            ))}
-        </div>
-    );
-}
-
-ArtsSection.propTypes = {
-    handleInputChange: PropTypes.func.isRequired,
-    arcArray: arcArrayPropType.isRequired,
-};
-
-const getTruArcName = {
-    DES: 'Destruicao',
-    LEV: 'Levitacao',
-    LIB: 'Liberacao',
-    MAN: 'Manipulacao',
-    IMA: 'Imaginacao',
-    MOD: 'Modificacao',
-    CRI: 'Criacao',
-};
-
-export function ArcaneArts({ art, handleInputChange }) {
-    const { userData } = useContext(UserContext);
-    const labelStyle = getColorStyle(arcColors, art);
-
-    return (
-        <div className="status-row status-row--art">
-            <span className="status-chip" style={labelStyle}>{getTruArcName[art]}</span>
-            <input
-                className="status-input"
-                type="number"
-                step={1}
-                min={0}
-                placeholder="0"
-                value={userData[`art-${art}`] || ''}
-                onChange={handleInputChange(`art-${art}`)}
-                onKeyDownCapture={handleKeyPress}
-                id={`label-${art}`}
-                disabled={userData.isLocked}
-            />
-        </div>
-    );
-}
-
-ArcaneArts.propTypes = {
-    art: PropTypes.string.isRequired,
-    handleInputChange: PropTypes.func.isRequired,
-};
-
-export function SubArtsSection({ handleInputChange, subArcArray }) {
-    return (
-        <div className="status-grid status-grid--subarts">
-            {subArcArray.map(({ subArt, art }) => (
-                <SubArcaneArts key={subArt} subArt={subArt} art={art} handleInputChange={handleInputChange} />
-            ))}
-        </div>
-    );
-}
-
-SubArtsSection.propTypes = {
-    handleInputChange: PropTypes.func.isRequired,
-    subArcArray: subArcArrayPropType.isRequired,
-};
-
-export function SubArcaneArts({ subArt, art, handleInputChange }) {
-    const { userData } = useContext(UserContext);
-    const labelStyle = getColorStyle(arcColors, art);
-
-    return (
-        <div className="status-row status-row--subart">
-            <span className="status-chip" style={labelStyle}>{art}</span>
-            <span className="status-label">{subArt}</span>
-            <input
-                className="status-input"
-                type="number"
-                step={1}
-                min={0}
-                placeholder="0"
-                value={userData[`subArt-${subArt}`] || ''}
-                onChange={handleInputChange(`subArt-${subArt}`)}
-                onKeyDownCapture={handleKeyPress}
-                id={`label-${subArt}`}
-                disabled={userData.isLocked}
-            />
-        </div>
-    );
-}
-
-SubArcaneArts.propTypes = {
-    subArt: PropTypes.string.isRequired,
-    art: PropTypes.string.isRequired,
-    handleInputChange: PropTypes.func.isRequired,
-};
 

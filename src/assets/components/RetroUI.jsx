@@ -78,15 +78,6 @@ RetroBadge.propTypes = {
     className: PropTypes.string,
 };
 
-export function RetroToolbar({ children, className }) {
-    return <div className={joinClassNames('retro-toolbar', className)}>{children}</div>;
-}
-
-RetroToolbar.propTypes = {
-    children: PropTypes.node,
-    className: PropTypes.string,
-};
-
 export function RetroModalHeader({ title, onClose, className }) {
     return (
         <div className={joinClassNames('retro-modal-header', className)}>
