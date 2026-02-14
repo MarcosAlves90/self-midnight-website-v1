@@ -1,4 +1,4 @@
-import {useCallback, useEffect, useState, useMemo, useContext, useRef} from 'react';
+import {useCallback, useEffect, useState, useMemo, useContext} from 'react';
 import {ArtsSection, Attributes, Biotipos, PericiasSection, SubArtsSection} from '../assets/systems/FichaPage3/FichaPage3System.jsx';
 import {arcArray, atrMap, bioMap, perArray, subArcArray} from '../assets/systems/FichaPage3/FichaPage3Arrays.jsx';
 import {saveUserData} from '../firebaseUtils.js';
@@ -6,6 +6,7 @@ import {ToastContainer, toast} from 'react-toastify';
 import {UserContext} from '../UserContext.jsx';
 import {StyledButton, StyledTextField} from '../assets/systems/CommonComponents.jsx';
 import { RetroPage, RetroPanel, RetroBadge, RetroWindow } from '../assets/components/RetroUI.jsx';
+import { useDebouncedCloudSave } from '../assets/systems/useDebouncedCloudSave.js';
 
 export default function Page3() {
     const [totalPoints, setTotalPoints] = useState({ bioPoints: 0, atrPoints: 0, perPoints: 0, arcPoints: 0, subArcPoints: 0 });
@@ -14,14 +15,7 @@ export default function Page3() {
     const [noStatusDice, setNoStatusDice] = useState('');
     const [searchTerm, setSearchTerm] = useState('');
     const {userData, setUserData, user} = useContext(UserContext);
-    const debounceTimeout = useRef(null);
-
-    const saveDataDebounced = useCallback((data) => {
-        if (debounceTimeout.current) clearTimeout(debounceTimeout.current);
-        debounceTimeout.current = setTimeout(() => {
-            if (user) saveUserData(data);
-        }, 500);
-    }, [user]);
+    useDebouncedCloudSave(userData, Boolean(user), saveUserData);
 
     const calculateTotalPoints = useCallback(() => {
         const newTotalPoints = { bioPoints: 0, atrPoints: 0, perPoints: 0, arcPoints: 0, subArcPoints: 0 };
@@ -40,9 +34,8 @@ export default function Page3() {
     }, [userData]);
 
     useEffect(() => {
-        saveDataDebounced(userData);
         calculateTotalPoints();
-    }, [userData, saveDataDebounced, calculateTotalPoints]);
+    }, [userData, calculateTotalPoints]);
 
     const handleInputChange = useCallback((key) => (event) => {
         const {value, type} = event.target;

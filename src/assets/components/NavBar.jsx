@@ -16,7 +16,7 @@ const navItems = [
     { label: 'Configuracoes', path: '/configuracoes' },
 ];
 
-const getPageTitle = (pathname) => navItems.find((nav) => nav.path === pathname)?.label || 'MidNight';
+const getPageTitle = (pathname) => navItems.find((nav) => nav.path === pathname)?.label || 'HighNoon';
 
 export default function NavBar() {
     const [isMenuOpen, setMenuOpen] = useState(false);

@@ -51,7 +51,7 @@ export default function Login() {
                 userData = decompressData(userData);
                 setUserData(userData);
             } else {
-                await createUserData('');
+                await createUserData();
             }
             navigate('/individual');
         } catch (error) {

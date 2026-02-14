@@ -5,6 +5,7 @@ import { UserContext } from '../UserContext';
 import { StyledButton, StyledTextField } from '../assets/systems/CommonComponents.jsx';
 import ReactModal from 'react-modal';
 import { RetroPage, RetroPanel, RetroCard, RetroBadge, RetroModalHeader, RetroWindow } from '../assets/components/RetroUI.jsx';
+import { useDebouncedCloudSave } from '../assets/systems/useDebouncedCloudSave.js';
 
 ReactModal.setAppElement('#root');
 
@@ -17,22 +18,11 @@ export default function Page4() {
     const [localItem, setLocalItem] = useState(null);
     const inputRef = useRef(null);
     const { userData, setUserData, user } = useContext(UserContext);
-    const debounceTimeout = useRef(null);
+    useDebouncedCloudSave(userData, Boolean(user), saveUserData);
 
     useEffect(() => {
         if (modalIsOpen && inputRef.current) inputRef.current.focus();
     }, [modalIsOpen]);
-
-    const saveDataDebounced = useCallback((data) => {
-        if (debounceTimeout.current) clearTimeout(debounceTimeout.current);
-        debounceTimeout.current = setTimeout(() => {
-            if (user) saveUserData(data);
-        }, 500);
-    }, [user]);
-
-    useEffect(() => {
-        saveDataDebounced(userData);
-    }, [userData, saveDataDebounced]);
 
     const closeModal = useCallback(() => {
         setIsOpen(false);
@@ -248,4 +238,3 @@ export default function Page4() {
         </>
     );
 }
-

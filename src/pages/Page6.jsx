@@ -5,6 +5,7 @@ import ReactModal from 'react-modal';
 import { UserContext } from '../UserContext';
 import { StyledButton, StyledTextField } from '../assets/systems/CommonComponents.jsx';
 import { RetroPage, RetroPanel, RetroCard, RetroBadge, RetroModalHeader, RetroWindow } from '../assets/components/RetroUI.jsx';
+import { useDebouncedCloudSave } from '../assets/systems/useDebouncedCloudSave.js';
 
 ReactModal.setAppElement('#root');
 
@@ -17,7 +18,7 @@ export default function Page6() {
     const [searchTerm, setSearchTerm] = useState('');
     const [activeCategories, setActiveCategories] = useState([]);
     const { userData, setUserData, user } = useContext(UserContext);
-    const debounceTimeout = useRef(null);
+    useDebouncedCloudSave(userData, Boolean(user), saveUserData);
 
     const [ducados, setDucados] = useState(userData.ducados || '000');
     const [criptogenes, setCriptogenes] = useState(userData.criptogenes || '000');
@@ -27,17 +28,6 @@ export default function Page6() {
         () => 'https://pbs.twimg.com/profile_images/1488183450406461452/tH7EIigT_400x400.png',
         []
     );
-
-    const saveDataDebounced = useCallback((data) => {
-        if (debounceTimeout.current) clearTimeout(debounceTimeout.current);
-        debounceTimeout.current = setTimeout(() => {
-            if (user) saveUserData(data);
-        }, 500);
-    }, [user]);
-
-    useEffect(() => {
-        saveDataDebounced(userData);
-    }, [userData, saveDataDebounced]);
 
     useEffect(() => {
         setDucados(userData.ducados || '000');
@@ -328,4 +318,3 @@ export default function Page6() {
         </>
     );
 }
-
