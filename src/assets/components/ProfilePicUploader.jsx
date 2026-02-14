@@ -1,19 +1,18 @@
-import { useEffect, useContext } from 'react';
+import { useEffect, useContext, useCallback } from 'react';
 import imageCompression from 'browser-image-compression';
 import { UserContext } from '../../UserContext.jsx';
 
 export default function ProfilePicUploader() {
     const { userData, setUserData } = useContext(UserContext);
 
-    const handleElementChange = (key) => (value) => {
+    const handleElementChange = useCallback((key) => (value) => {
         setUserData((prevUserData) => ({
             ...prevUserData,
             [key]: value,
         }));
-    };
+    }, [setUserData]);
 
-    useEffect(() => {
-        const handlePaste = async (event) => {
+    const handlePaste = useCallback(async (event) => {
             const items = event.clipboardData.items;
             for (let i = 0; i < items.length; i++) {
                 if (items[i].type.indexOf('image') !== -1) {
@@ -40,15 +39,16 @@ export default function ProfilePicUploader() {
                     }
                 }
             }
-        };
+        }, [handleElementChange]);
 
+    useEffect(() => {
         window.addEventListener('paste', handlePaste);
         return () => {
             window.removeEventListener('paste', handlePaste);
         };
-    }, [setUserData]);
+    }, [handlePaste]);
 
-    async function handleFileChange(event) {
+    const handleFileChange = useCallback(async (event) => {
         const file = event.target.files[0];
         if (file) {
             const options = {
@@ -72,7 +72,7 @@ export default function ProfilePicUploader() {
                 console.error(error);
             }
         }
-    }
+    }, [handleElementChange]);
 
     return (
         <div className="profile-uploader">

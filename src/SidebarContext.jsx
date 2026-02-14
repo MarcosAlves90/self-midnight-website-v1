@@ -1,6 +1,7 @@
 import { createContext, useState, useCallback, useEffect } from 'react';
+import PropTypes from 'prop-types';
 
-export const SidebarContext = createContext();
+const SidebarContext = createContext();
 
 export function SidebarProvider({ children }) {
     const [isCompact, setIsCompact] = useState(() => {
@@ -30,5 +31,9 @@ export function SidebarProvider({ children }) {
         </SidebarContext.Provider>
     );
 }
+
+SidebarProvider.propTypes = {
+    children: PropTypes.node.isRequired,
+};
 
 

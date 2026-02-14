@@ -4,18 +4,22 @@ export function StyledTextField({
     multiline = false,
     minRows = 3,
     label,
+    helperText,
     slotProps,
+    className,
     ...props
 }) {
     const startAdornment = slotProps?.input?.startAdornment;
+    const labelClassName = ['styled-field', className].filter(Boolean).join(' ');
 
     return (
-        <label>
+        <label className={labelClassName}>
             {label ? <span>{label}</span> : null}
-            <div>
-                {startAdornment ? <span>{startAdornment}</span> : null}
+            <div className="styled-field__control">
+                {startAdornment ? <span className="styled-field__adornment">{startAdornment}</span> : null}
                 {multiline ? <textarea rows={minRows} {...props} /> : <input {...props} />}
             </div>
+            {helperText ? <small className="styled-field__helper">{helperText}</small> : null}
         </label>
     );
 }
@@ -24,7 +28,9 @@ StyledTextField.propTypes = {
     multiline: PropTypes.bool,
     minRows: PropTypes.number,
     label: PropTypes.string,
+    helperText: PropTypes.string,
     slotProps: PropTypes.object,
+    className: PropTypes.string,
 };
 
 export function StyledFormControl({ children }) {

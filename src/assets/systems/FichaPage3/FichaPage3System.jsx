@@ -30,13 +30,21 @@ function handleKeyPress(event) {
     }
 }
 
+function getColorStyle(palette, key) {
+    const entry = palette[key];
+    if (!entry) return undefined;
+    return { background: entry.background, color: entry.color };
+}
+
 export function Biotipos({ biotipo, handleInputChange }) {
     const { userData } = useContext(UserContext);
+    const labelStyle = getColorStyle(bioColors, biotipo);
 
     return (
-        <div>
-            <span>{biotipo}</span>
+        <div className="status-row status-row--biotipo">
+            <span className="status-chip" style={labelStyle}>{biotipo}</span>
             <input
+                className="status-input"
                 type="number"
                 step={1}
                 min={0}
@@ -66,11 +74,15 @@ const getTruAttrName = {
 
 export function Attributes({ atributo, atr, handleInputChange, rollDice }) {
     const { userData } = useContext(UserContext);
+    const labelStyle = getColorStyle(atrColors, atributo);
 
     return (
-        <div>
-            <span id={`button-${atributo}`} onClick={rollDice}>{getTruAttrName[atributo]}</span>
+        <div className="status-row status-row--attribute">
+            <button type="button" id={`button-${atributo}`} onClick={rollDice} className="status-roll" style={labelStyle}>
+                {getTruAttrName[atributo]}
+            </button>
             <input
+                className="status-input"
                 type="number"
                 step={1}
                 min={0}
@@ -82,6 +94,7 @@ export function Attributes({ atributo, atr, handleInputChange, rollDice }) {
                 disabled={userData.isLocked}
             />
             <input
+                className="status-input status-input--bonus"
                 type="number"
                 step={1}
                 min={0}
@@ -105,11 +118,9 @@ Attributes.propTypes = {
 
 export function PericiasSection({ rollDice, handleInputChange, perArray }) {
     return (
-        <div>
-            {perArray.map(({ pericia, atr }, index) => (
-                <div key={index}>
-                    <Pericia pericia={pericia} atr={atr} key={pericia} rollDice={rollDice} handleInputChange={handleInputChange} />
-                </div>
+        <div className="status-grid status-grid--pericias">
+            {perArray.map(({ pericia, atr }) => (
+                <Pericia pericia={pericia} atr={atr} key={pericia} rollDice={rollDice} handleInputChange={handleInputChange} />
             ))}
         </div>
     );
@@ -123,13 +134,38 @@ PericiasSection.propTypes = {
 
 function Pericia({ pericia, atr, handleInputChange, rollDice }) {
     const { userData } = useContext(UserContext);
+    const atrStyle = getColorStyle(atrColors, atr);
 
     return (
-        <div>
-            <span>{atr}</span>
-            <span id={`button-${pericia}`} onClick={rollDice}>{pericia}</span>
-            <input type="number" step={1} min={0} placeholder="0" value={userData[`pericia-${pericia}`] || ''} onChange={handleInputChange(`pericia-${pericia}`)} onKeyDownCapture={handleKeyPress} id={`label-${pericia}`} disabled={userData.isLocked} />
-            <input type="number" step={1} min={0} placeholder="0" value={userData[`pericia-${pericia}-bonus`] || ''} onChange={handleInputChange(`pericia-${pericia}-bonus`)} onKeyDownCapture={handleKeyPress} id={`label-${pericia}-bonus`} disabled={userData.isLocked} />
+        <div className="status-row status-row--pericia">
+            <span className="status-chip" style={atrStyle}>{atr}</span>
+            <button type="button" id={`button-${pericia}`} onClick={rollDice} className="status-roll">
+                {pericia}
+            </button>
+            <input
+                className="status-input"
+                type="number"
+                step={1}
+                min={0}
+                placeholder="0"
+                value={userData[`pericia-${pericia}`] || ''}
+                onChange={handleInputChange(`pericia-${pericia}`)}
+                onKeyDownCapture={handleKeyPress}
+                id={`label-${pericia}`}
+                disabled={userData.isLocked}
+            />
+            <input
+                className="status-input status-input--bonus"
+                type="number"
+                step={1}
+                min={0}
+                placeholder="0"
+                value={userData[`pericia-${pericia}-bonus`] || ''}
+                onChange={handleInputChange(`pericia-${pericia}-bonus`)}
+                onKeyDownCapture={handleKeyPress}
+                id={`label-${pericia}-bonus`}
+                disabled={userData.isLocked}
+            />
         </div>
     );
 }
@@ -143,7 +179,7 @@ Pericia.propTypes = {
 
 export function ArtsSection({ handleInputChange, arcArray }) {
     return (
-        <div>
+        <div className="status-grid status-grid--arts">
             {arcArray.map(({ art }) => (
                 <ArcaneArts art={art} key={art} handleInputChange={handleInputChange} />
             ))}
@@ -168,11 +204,13 @@ const getTruArcName = {
 
 export function ArcaneArts({ art, handleInputChange }) {
     const { userData } = useContext(UserContext);
+    const labelStyle = getColorStyle(arcColors, art);
 
     return (
-        <div>
-            <span>{getTruArcName[art]}</span>
+        <div className="status-row status-row--art">
+            <span className="status-chip" style={labelStyle}>{getTruArcName[art]}</span>
             <input
+                className="status-input"
                 type="number"
                 step={1}
                 min={0}
@@ -194,11 +232,9 @@ ArcaneArts.propTypes = {
 
 export function SubArtsSection({ handleInputChange, subArcArray }) {
     return (
-        <div>
+        <div className="status-grid status-grid--subarts">
             {subArcArray.map(({ subArt, art }) => (
-                <div key={subArt}>
-                    <SubArcaneArts subArt={subArt} art={art} handleInputChange={handleInputChange} />
-                </div>
+                <SubArcaneArts key={subArt} subArt={subArt} art={art} handleInputChange={handleInputChange} />
             ))}
         </div>
     );
@@ -211,12 +247,14 @@ SubArtsSection.propTypes = {
 
 export function SubArcaneArts({ subArt, art, handleInputChange }) {
     const { userData } = useContext(UserContext);
+    const labelStyle = getColorStyle(arcColors, art);
 
     return (
-        <div>
-            <span>{art}</span>
-            <span>{subArt}</span>
+        <div className="status-row status-row--subart">
+            <span className="status-chip" style={labelStyle}>{art}</span>
+            <span className="status-label">{subArt}</span>
             <input
+                className="status-input"
                 type="number"
                 step={1}
                 min={0}

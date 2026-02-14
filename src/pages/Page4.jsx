@@ -4,8 +4,7 @@ import { saveUserData } from '../firebaseUtils.js';
 import { UserContext } from '../UserContext';
 import { StyledButton, StyledTextField } from '../assets/systems/CommonComponents.jsx';
 import ReactModal from 'react-modal';
-import { retroModalStyle } from '../assets/styles/retroTheme.js';
-import { RetroPage, RetroPanel, RetroCard, RetroBadge, RetroModalHeader } from '../assets/components/RetroUI.jsx';
+import { RetroPage, RetroPanel, RetroCard, RetroBadge, RetroModalHeader, RetroWindow } from '../assets/components/RetroUI.jsx';
 
 ReactModal.setAppElement('#root');
 
@@ -19,6 +18,10 @@ export default function Page4() {
     const inputRef = useRef(null);
     const { userData, setUserData, user } = useContext(UserContext);
     const debounceTimeout = useRef(null);
+
+    useEffect(() => {
+        if (modalIsOpen && inputRef.current) inputRef.current.focus();
+    }, [modalIsOpen]);
 
     const saveDataDebounced = useCallback((data) => {
         if (debounceTimeout.current) clearTimeout(debounceTimeout.current);
@@ -115,36 +118,67 @@ export default function Page4() {
         setLocalItem((prevItem) => ({ ...prevItem, [name]: value }));
 
         setUserData((prevUserData) => {
-            const updatedItems = prevUserData.skillsArray.map((item) => item.id === localItem.id ? { ...localItem, [name]: value } : item);
+            const updatedItems = (prevUserData.skillsArray || []).map((item) => item.id === selectedItem?.id ? { ...item, [name]: value } : item);
             return { ...prevUserData, skillsArray: updatedItems };
         });
-    }, [localItem, setUserData]);
+    }, [selectedItem, setUserData]);
 
     const placeHolderImage = useMemo(() => 'https://pt.quizur.com/_image?href=https%3A%2F%2Fimg.quizur.com%2Ff%2Fimg5c40afdab16e93.66721106.png%3FlastEdited%3D1547743200&w=400&h=400&f=webp', []);
+    const skillCount = userData.skillsArray ? userData.skillsArray.length : 0;
 
     return (
         <>
-            <ReactModal isOpen={modalIsOpen} onRequestClose={closeModal}>
+            <ReactModal
+                isOpen={modalIsOpen}
+                onRequestClose={closeModal}
+                className="retro-modal"
+                overlayClassName="retro-modal__overlay"
+            >
                 {localItem ? (
-                    <div>
+                    <div className="skill-modal">
                         <RetroModalHeader title="Editor de skill" onClose={closeModal} />
-                        <img src={localItem.image || placeHolderImage} alt="Item" />
-                        <input ref={inputRef} value={localItem.title} name="title" onChange={handleInputChange} placeholder="Titulo do seu item." />
-                        <div>
+                        <div className="skill-modal__media">
+                            <img src={localItem.image || placeHolderImage} alt="Skill" />
+                            <div className="skill-modal__title">
+                                <label className="styled-field">
+                                    <span>Titulo</span>
+                                    <div className="styled-field__control">
+                                        <input ref={inputRef} value={localItem.title || ''} name="title" onChange={handleInputChange} placeholder="Titulo da skill" />
+                                    </div>
+                                </label>
+                                <StyledTextField
+                                    value={localItem.domain || ''}
+                                    name="domain"
+                                    onChange={handleInputChange}
+                                    label="Dominios"
+                                    helperText="Separe por virgula para facilitar os filtros."
+                                />
+                            </div>
+                        </div>
+
+                        <div className="skill-modal__grid">
                             <StyledTextField value={localItem.circle || ''} onChange={handleInputChange} name="circle" label="Circulo" />
                             <StyledTextField value={localItem.type || ''} onChange={handleInputChange} name="type" label="Categoria" />
-                            <StyledTextField value={localItem.spent} onChange={handleInputChange} name="spent" label="Gasto" />
+                            <StyledTextField value={localItem.spent || ''} onChange={handleInputChange} name="spent" label="Gasto" />
                             <StyledTextField value={localItem.execution || ''} onChange={handleInputChange} name="execution" label="Execucao" />
                             <StyledTextField value={localItem.range || ''} onChange={handleInputChange} name="range" label="Alcance" />
-                            <StyledTextField value={localItem.area} onChange={handleInputChange} name="area" label="Area" />
-                            <StyledTextField value={localItem.target} onChange={handleInputChange} name="target" label="Alvo" />
-                            <StyledTextField value={localItem.duration} onChange={handleInputChange} name="duration" label="Duracao" />
-                            <StyledTextField value={localItem.resistance} onChange={handleInputChange} name="resistance" label="Resistencia" />
+                            <StyledTextField value={localItem.area || ''} onChange={handleInputChange} name="area" label="Area" />
+                            <StyledTextField value={localItem.target || ''} onChange={handleInputChange} name="target" label="Alvo" />
+                            <StyledTextField value={localItem.duration || ''} onChange={handleInputChange} name="duration" label="Duracao" />
+                            <StyledTextField value={localItem.resistance || ''} onChange={handleInputChange} name="resistance" label="Resistencia" />
                         </div>
-                        <textarea value={localItem.content} name="content" onChange={handleInputChange} placeholder="Descricao da skill" />
-                        <StyledTextField value={localItem.domain} fullWidth name="domain" onChange={handleInputChange} label="Dominios" />
-                        <StyledTextField value={localItem.image} fullWidth name="image" onChange={handleInputChange} label="Link da imagem" />
-                        <div>
+
+                        <StyledTextField
+                            multiline
+                            minRows={6}
+                            value={localItem.content || ''}
+                            name="content"
+                            onChange={handleInputChange}
+                            label="Descricao"
+                            placeholder="Descreva efeitos, custo e exemplos de uso."
+                        />
+                        <StyledTextField value={localItem.image || ''} name="image" onChange={handleInputChange} label="Link da imagem" />
+                        <div className="modal-actions">
                             <StyledButton variant="danger" onClick={handleDelete}>Deletar</StyledButton>
                             <StyledButton onClick={handleCopy}>Copiar</StyledButton>
                         </div>
@@ -152,39 +186,66 @@ export default function Page4() {
                 ) : null}
             </ReactModal>
 
-            <RetroPage title="Biblioteca de Skills" subtitle="Crie, edite e catalogue habilidades com dominios">
-                <RetroPanel title="Skills">
-                    <div>
-                        <StyledTextField type="text" placeholder="nome da skill..." value={createSkill} onChange={(event) => setCreateSkill(event.target.value)} fullWidth />
-                        <div>
-                            <StyledButton onClick={handleCreateSkill}>Criar Skill</StyledButton>
-                            <StyledButton onClick={handlePaste}>Colar Skill</StyledButton>
+            <RetroPage>
+                <RetroWindow title="Catalogo">
+                    <RetroPanel title="Skills">
+                        <div className="library-panel">
+                            <div className="library-header">
+                                <StyledTextField
+                                    type="text"
+                                    label="Nova skill"
+                                    placeholder="Nome da skill..."
+                                    value={createSkill}
+                                    onChange={(event) => setCreateSkill(event.target.value)}
+                                    fullWidth
+                                />
+                                <div className="library-actions">
+                                    <StyledButton onClick={handleCreateSkill}>Criar Skill</StyledButton>
+                                    <StyledButton onClick={handlePaste}>Colar Skill</StyledButton>
+                                </div>
+                            </div>
+
+                            <div className="library-filters">
+                                <StyledTextField
+                                    type="text"
+                                    label="Pesquisar"
+                                    placeholder="Buscar por titulo, dominio ou detalhe..."
+                                    value={searchTerm}
+                                    onChange={(event) => setSearchTerm(event.target.value)}
+                                    fullWidth
+                                />
+                                <div className="library-tags">
+                                    <RetroBadge>{`${skillCount}/10 Skills`}</RetroBadge>
+                                    {uniqueDomains.map((domain) => (
+                                        <RetroBadge
+                                            key={domain}
+                                            active={activeDomains.includes(domain)}
+                                            onClick={() => setActiveDomains(activeDomains.includes(domain) ? activeDomains.filter((d) => d !== domain) : [...activeDomains, domain])}
+                                        >
+                                            {domain.length > 40 ? `${domain.slice(0, 30)}...` : domain}
+                                        </RetroBadge>
+                                    ))}
+                                </div>
+                            </div>
                         </div>
-                        <StyledTextField type="text" placeholder="pesquisar skills..." value={searchTerm} onChange={(event) => setSearchTerm(event.target.value)} fullWidth />
-                    </div>
 
-                    <section>
-                        <RetroBadge>{`${userData.skillsArray ? userData.skillsArray.length : 0}/10 Skills`}</RetroBadge>
-                        {uniqueDomains.map((domain) => (
-                            <RetroBadge key={domain} active={activeDomains.includes(domain)} onClick={() => setActiveDomains(activeDomains.includes(domain) ? activeDomains.filter((d) => d !== domain) : [...activeDomains, domain])}>
-                                {domain.length > 40 ? `${domain.slice(0, 30)}...` : domain}
-                            </RetroBadge>
-                        ))}
-                    </section>
-
-                    <article>
-                        {(filteredSkills || []).map((skill) => (
-                            <RetroCard key={skill.id} onClick={() => openModal(skill)}>
-                                <img src={skill.image || placeHolderImage} alt="Skill" />
-                                <p>{skill.title.toUpperCase()}</p>
-                            </RetroCard>
-                        ))}
-                    </article>
-                </RetroPanel>
+                        <article className="library-grid">
+                            {(filteredSkills || []).map((skill) => (
+                                <RetroCard key={skill.id} onClick={() => openModal(skill)} className="library-card">
+                                    <div className="library-card__media">
+                                        <img src={skill.image || placeHolderImage} alt="Skill" />
+                                    </div>
+                                    <div className="library-card__content">
+                                        <p className="library-card__title">{skill.title || 'Sem titulo'}</p>
+                                        <p className="library-card__meta">{skill.domain || 'Sem dominios'}</p>
+                                    </div>
+                                </RetroCard>
+                            ))}
+                        </article>
+                    </RetroPanel>
+                </RetroWindow>
             </RetroPage>
         </>
     );
 }
-
-
 

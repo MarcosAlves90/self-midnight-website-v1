@@ -61,7 +61,7 @@ export default function Page1() {
     };
 
     return (
-        <RetroPage title="Identidade do Agente" subtitle="Cadastro principal, parametros vitais e progressao">
+        <RetroPage>
             <section className="page1-console">
                 <div className="page1-console__window retro-window">
                     <header className="retro-titlebar">

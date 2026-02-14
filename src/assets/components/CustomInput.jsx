@@ -17,9 +17,10 @@ export default function CustomInput({
     ...props
 }) {
     const inputId = `input-${(label || 'field').replace(/\s+/g, '-').toLowerCase()}`;
+    const wrapperStyle = fullWidth ? { width: '100%' } : undefined;
 
     return (
-        <div>
+        <div style={wrapperStyle}>
             {label ? <label htmlFor={inputId}>{label}</label> : null}
             <div>
                 {startAdornment ? <span>{startAdornment}</span> : null}

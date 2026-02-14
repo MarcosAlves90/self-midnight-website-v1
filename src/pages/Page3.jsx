@@ -3,10 +3,9 @@ import {ArtsSection, Attributes, Biotipos, PericiasSection, SubArtsSection} from
 import {arcArray, atrMap, bioMap, perArray, subArcArray} from '../assets/systems/FichaPage3/FichaPage3Arrays.jsx';
 import {saveUserData} from '../firebaseUtils.js';
 import {ToastContainer, toast} from 'react-toastify';
-import {map} from 'jquery';
 import {UserContext} from '../UserContext.jsx';
 import {StyledButton, StyledTextField} from '../assets/systems/CommonComponents.jsx';
-import { RetroPage, RetroPanel, RetroToolbar, RetroBadge } from '../assets/components/RetroUI.jsx';
+import { RetroPage, RetroPanel, RetroBadge, RetroWindow } from '../assets/components/RetroUI.jsx';
 
 export default function Page3() {
     const [totalPoints, setTotalPoints] = useState({ bioPoints: 0, atrPoints: 0, perPoints: 0, arcPoints: 0, subArcPoints: 0 });
@@ -45,18 +44,18 @@ export default function Page3() {
         calculateTotalPoints();
     }, [userData, saveDataDebounced, calculateTotalPoints]);
 
-    const handleInputChange = (key) => (event) => {
+    const handleInputChange = useCallback((key) => (event) => {
         const {value, type} = event.target;
         setUserData((prevUserData) => ({ ...prevUserData, [key]: type === 'number' ? (value === '' ? '' : parseFloat(value)) : value }));
-    };
+    }, [setUserData]);
 
-    const handleElementChange = (key) => (value) => {
+    const handleElementChange = useCallback((key) => (value) => {
         setUserData((prevUserData) => ({ ...prevUserData, [key]: value }));
-    };
+    }, [setUserData]);
 
-    const handleLockChange = () => {
+    const handleLockChange = useCallback(() => {
         handleElementChange('isLocked')(!userData.isLocked);
-    };
+    }, [handleElementChange, userData.isLocked]);
 
     const calculateAttributesPoints = useCallback(() => {
         const nivel = userData.nivel || 1;
@@ -136,10 +135,10 @@ export default function Page3() {
             const periciaName = (e.target.id).slice(7);
             const pericia = userData[`pericia-${periciaName}`] || 0;
             const periciaBonus = userData[`pericia-${periciaName}-bonus`] || 0;
-            let attribute = map(perArray, (per) => (per.pericia === periciaName ? userData[`atributo-${per.atr}`] || 0 : null));
-            let attributeBonus = map(perArray, (per) => (per.pericia === periciaName ? userData[`atributo-${per.atr}-bonus`] || 0 : null));
-            attribute = attribute.length > 0 ? attribute[0] : 0;
-            attributeBonus = attributeBonus.length > 0 ? attributeBonus[0] : 0;
+            const periciaDef = perArray.find((per) => per.pericia === periciaName);
+            const atrKey = periciaDef?.atr;
+            let attribute = atrKey ? (userData[`atributo-${atrKey}`] || 0) : 0;
+            let attributeBonus = atrKey ? (userData[`atributo-${atrKey}-bonus`] || 0) : 0;
             [noAttribute, attribute, attributeBonus] = verifyAttribute(attribute, attributeBonus);
             rollAttributeDice(attribute, attributeBonus);
             chooseMinOrMax(noAttribute);
@@ -236,99 +235,157 @@ export default function Page3() {
     const filteredArcArray = useMemo(() => arcArray.filter((item) => item.art.toLowerCase().includes(searchTerm)), [searchTerm]);
     const filteredSubArcArray = useMemo(() => subArcArray.filter((item) => item.subArt.toLowerCase().includes(searchTerm)), [searchTerm]);
 
-    const periciaHeaderValue = !userData.nivel || userData.nivel === '' || Number.isNaN(userData.nivel)
-        ? 'Verifique seu nivel'
-        : calculatePericiasPoints() > 0
-            ? calculatePericiasPoints()
-            : calculatePericiasPoints() === 0
-                ? 'Preencha Biotipo e Atributos'
-                : 'Biotipo invalido';
+    const periciaHeaderValue = useMemo(() => {
+        if (!userData.nivel || userData.nivel === '' || Number.isNaN(userData.nivel)) return 'Verifique seu nivel';
+        const periciasPoints = calculatePericiasPoints();
+        if (periciasPoints > 0) return periciasPoints;
+        if (periciasPoints === 0) return 'Preencha Biotipo e Atributos';
+        return 'Biotipo invalido';
+    }, [userData.nivel, calculatePericiasPoints]);
+
+    const arcCap = (userData['pericia-Magia Arcana'] || 0) * 5;
+    const statusSummary = useMemo(() => ([
+        {
+            id: 'bio',
+            label: 'Biotipo',
+            value: totalPoints.bioPoints,
+            cap: 9,
+            accent: 'var(--color-life)',
+        },
+        {
+            id: 'atr',
+            label: 'Atributos',
+            value: totalPoints.atrPoints,
+            cap: calculateAttributesPoints(),
+            accent: 'var(--yellow-des)',
+        },
+        {
+            id: 'per',
+            label: 'Pericias',
+            value: totalPoints.perPoints,
+            cap: periciaHeaderValue,
+            accent: 'var(--color-per)',
+        },
+        {
+            id: 'art',
+            label: 'Artes',
+            value: totalPoints.arcPoints,
+            cap: arcCap,
+            accent: 'var(--color-creation)',
+        },
+        {
+            id: 'subart',
+            label: 'Subartes',
+            value: totalPoints.subArcPoints,
+            cap: arcCap,
+            accent: 'var(--color-imagination)',
+        },
+    ]), [arcCap, calculateAttributesPoints, periciaHeaderValue, totalPoints]);
+
+    const lastRollLabel = tempRoll.Pericia || 'Nenhuma';
+    const lastRollDice = tempRoll.Dice ? `${tempRoll.Dice.slice(0, 60)}${tempRoll.Dice.length > 60 ? '...' : ''}` : '-';
+    const lastRollResult = tempRoll.Result || 0;
 
     return (
-        <RetroPage title="Status e Rolagens" subtitle="Distribuicao de pontos, controle de bloqueio e simulador de dados">
-            <ToastContainer limit={5} closeOnClick />
+        <RetroPage>
+            <RetroWindow title="Status">
+                <ToastContainer limit={5} closeOnClick />
 
-            <RetroPanel title="Ultima rolagem">
-                <div>
-                    <RetroBadge>Pericia: {tempRoll.Pericia || 'Nenhuma'}</RetroBadge>
-                    <RetroBadge>Dados: {`${tempRoll.Dice.slice(0, 60)}${tempRoll.Dice.length > 60 ? '...' : ''}`}</RetroBadge>
-                    <RetroBadge>Resultado: {tempRoll.Result || 0}</RetroBadge>
+                <div className="page3-status">
+                    <div className="page3-status__overview">
+                        <RetroPanel title="Resumo do operador">
+                            <div className="status-summary">
+                                {statusSummary.map((item) => (
+                                    <div key={item.id} className="status-card" style={{ '--status-accent': item.accent }}>
+                                        <p className="status-card__title">{item.label}</p>
+                                        <p className="status-card__value">{item.value}</p>
+                                        <p className="status-card__meta">Limite: {item.cap}</p>
+                                    </div>
+                                ))}
+                            </div>
+                        </RetroPanel>
+
+                        <RetroPanel title="Painel rapido">
+                            <div className="status-quick">
+                                <div className="status-quick__actions">
+                                    <StyledButton onClick={handleLockChange}>{userData.isLocked ? 'Bloqueado [LOCK]' : 'Desbloqueado [OPEN]'}</StyledButton>
+                                    <StyledButton onClick={() => setRecommendations(!recommendations)}>{recommendations ? 'Ocultar regras' : 'Mostrar regras'}</StyledButton>
+                                </div>
+
+                                <StyledTextField
+                                    type="text"
+                                    placeholder="Pesquisar status..."
+                                    value={searchTerm}
+                                    onChange={handleSearchChange}
+                                    fullWidth
+                                    slotProps={{ input: { startAdornment: '[FIND]' } }}
+                                />
+
+                                {recommendations ? (
+                                    <div className="status-rules">
+                                        <RetroBadge>Cap biotipo: 3</RetroBadge>
+                                        <RetroBadge>Cap atributos: {calculateAttributesCap()}</RetroBadge>
+                                        <RetroBadge>Cap pericias: {calculatePericiasCap()}</RetroBadge>
+                                        <RetroBadge>Cap artes e subartes: 15</RetroBadge>
+                                    </div>
+                                ) : null}
+
+                                <div className="status-quick__dice">
+                                    <StyledTextField
+                                        type="text"
+                                        placeholder="Ex.: 2d20+4 ou 4d6kh3"
+                                        value={noStatusDice}
+                                        onChange={handleNoStatusDiceChange}
+                                        fullWidth
+                                        slotProps={{ input: { startAdornment: '[DICE]' } }}
+                                    />
+                                    <StyledButton onClick={noStatusDiceRoll}>Rolar</StyledButton>
+                                </div>
+
+                                <div className="status-last-roll">
+                                    <RetroBadge>Pericia: {lastRollLabel}</RetroBadge>
+                                    <RetroBadge>Dados: {lastRollDice}</RetroBadge>
+                                    <RetroBadge>Resultado: {lastRollResult}</RetroBadge>
+                                </div>
+                            </div>
+                        </RetroPanel>
+                    </div>
                 </div>
-            </RetroPanel>
 
-            <RetroPanel title="Controles">
-                <RetroToolbar>
-                    <div>
-                        <StyledButton onClick={handleLockChange}>{userData.isLocked ? 'Bloqueado [LOCK]' : 'Desbloqueado [OPEN]'}</StyledButton>
-                        <StyledButton onClick={() => setRecommendations(!recommendations)}>{recommendations ? 'Ocultar regras' : 'Mostrar regras'}</StyledButton>
-                    </div>
-                    <StyledTextField
-                        type="text"
-                        placeholder="Pesquisar status..."
-                        value={searchTerm}
-                        onChange={handleSearchChange}
-                        fullWidth
-                        slotProps={{ input: { startAdornment: '[FIND]' } }}
-                    />
-                </RetroToolbar>
-
-                {recommendations ? (
-                    <div>
-                        <p>Cap biotipo: 3</p>
-                        <p>Cap atributos: {calculateAttributesCap()}</p>
-                        <p>Cap pericias: {calculatePericiasCap()}</p>
-                        <p>Cap artes e subartes: 15</p>
-                    </div>
+                {filteredBioMap.length > 0 ? (
+                    <RetroPanel title={`Biotipo [${totalPoints.bioPoints}/9]`}>
+                        <div className="status-grid status-grid--biotipos">
+                            {filteredBioMap.map((biotipo) => <Biotipos key={biotipo} biotipo={biotipo} handleInputChange={handleInputChange} />)}
+                        </div>
+                    </RetroPanel>
                 ) : null}
 
-                <RetroToolbar>
-                    <StyledTextField
-                        type="text"
-                        placeholder="Ex.: 2d20+4 ou 4d6kh3"
-                        value={noStatusDice}
-                        onChange={handleNoStatusDiceChange}
-                        fullWidth
-                        slotProps={{ input: { startAdornment: '[DICE]' } }}
-                    />
-                    <StyledButton onClick={noStatusDiceRoll}>Rolar</StyledButton>
-                </RetroToolbar>
-            </RetroPanel>
+                {filteredAtrMap.length > 0 ? (
+                    <RetroPanel title={`Atributos [${totalPoints.atrPoints}/${calculateAttributesPoints()}]`}>
+                        <div className="status-grid status-grid--atributos">
+                            {filteredAtrMap.map((atr) => <Attributes key={atr} atributo={atr} atr={atr} handleInputChange={handleInputChange} rollDice={rollDice} />)}
+                        </div>
+                    </RetroPanel>
+                ) : null}
 
-            {filteredBioMap.length > 0 ? (
-                <RetroPanel title={`Biotipo [${totalPoints.bioPoints}/9]`}>
-                    <div>
-                        {filteredBioMap.map((biotipo) => <Biotipos key={biotipo} biotipo={biotipo} handleInputChange={handleInputChange} />)}
-                    </div>
-                </RetroPanel>
-            ) : null}
+                {filteredPerArray.length > 0 ? (
+                    <RetroPanel title={`Pericias [${totalPoints.perPoints}/${periciaHeaderValue}]`}>
+                        <PericiasSection rollDice={rollDice} handleInputChange={handleInputChange} perArray={filteredPerArray} />
+                    </RetroPanel>
+                ) : null}
 
-            {filteredAtrMap.length > 0 ? (
-                <RetroPanel title={`Atributos [${totalPoints.atrPoints}/${calculateAttributesPoints()}]`}>
-                    <div>
-                        {filteredAtrMap.map((atr) => <Attributes key={atr} atributo={atr} atr={atr} handleInputChange={handleInputChange} rollDice={rollDice} />)}
-                    </div>
-                </RetroPanel>
-            ) : null}
+                {filteredArcArray.length > 0 ? (
+                    <RetroPanel title={`Artes [${totalPoints.arcPoints}/${arcCap}]`}>
+                        <ArtsSection handleInputChange={handleInputChange} arcArray={filteredArcArray} />
+                    </RetroPanel>
+                ) : null}
 
-            {filteredPerArray.length > 0 ? (
-                <RetroPanel title={`Pericias [${totalPoints.perPoints}/${periciaHeaderValue}]`}>
-                    <PericiasSection rollDice={rollDice} handleInputChange={handleInputChange} perArray={filteredPerArray} />
-                </RetroPanel>
-            ) : null}
-
-            {filteredArcArray.length > 0 ? (
-                <RetroPanel title={`Artes [${totalPoints.arcPoints}/${(userData['pericia-Magia Arcana'] || 0) * 5}]`}>
-                    <ArtsSection handleInputChange={handleInputChange} arcArray={filteredArcArray} />
-                </RetroPanel>
-            ) : null}
-
-            {filteredSubArcArray.length > 0 ? (
-                <RetroPanel title={`Subartes [${totalPoints.subArcPoints}/${(userData['pericia-Magia Arcana'] || 0) * 5}]`}>
-                    <SubArtsSection handleInputChange={handleInputChange} subArcArray={filteredSubArcArray} />
-                </RetroPanel>
-            ) : null}
+                {filteredSubArcArray.length > 0 ? (
+                    <RetroPanel title={`Subartes [${totalPoints.subArcPoints}/${arcCap}]`}>
+                        <SubArtsSection handleInputChange={handleInputChange} subArcArray={filteredSubArcArray} />
+                    </RetroPanel>
+                ) : null}
+            </RetroWindow>
         </RetroPage>
     );
 }
-
-

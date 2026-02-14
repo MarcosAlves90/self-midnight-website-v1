@@ -1,71 +1,67 @@
-import {saveUserData} from '../firebaseUtils.js';
-import {useState, useEffect, useContext} from 'react';
-import {useNavigate} from 'react-router-dom';
-import {auth} from '../firebase.js';
-import {UserContext} from '../UserContext';
-import {v4 as uuidv4} from 'uuid';
-import {decompressData} from '../assets/systems/SaveLoad.jsx';
-import {StyledButton} from '../assets/systems/CommonComponents.jsx';
-import { RetroPage, RetroPanel } from '../assets/components/RetroUI.jsx';
+import { saveUserData } from '../firebaseUtils.js';
+import { useState, useContext, useCallback, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { auth } from '../firebase.js';
+import { UserContext } from '../UserContext';
+import { v4 as uuidv4 } from 'uuid';
+import { decompressData } from '../assets/systems/SaveLoad.jsx';
+import { StyledButton } from '../assets/systems/CommonComponents.jsx';
+import { RetroPage, RetroPanel, RetroCard, RetroWindow } from '../assets/components/RetroUI.jsx';
 
 export default function Config() {
-    const [unlockedStates, setUnlockedStates] = useState({Delete: false, CloudSave: false});
-    const {userData, setUserData, user} = useContext(UserContext);
+    const [unlockedStates, setUnlockedStates] = useState({ Delete: false, CloudSave: false });
+    const { userData, setUserData, user } = useContext(UserContext);
     const navigate = useNavigate();
+    const fileInputRef = useRef(null);
 
-    useEffect(() => {
-        const handleFileLoad = (event) => {
-            const {files} = event.target;
-            if (!files.length) return;
-            const sheetCode = userData.sheetCode || uuidv4();
+    const ensureSheetCode = useCallback(() => userData.sheetCode || uuidv4(), [userData.sheetCode]);
 
-            const reader = new FileReader();
-            reader.onload = ({target}) => {
-                try {
-                    let data = JSON.parse(target.result);
-                    if (!data) throw new Error('Missing data');
-                    data = decompressData(data);
-                    if (!data.sheetCode || user !== null) data.sheetCode = sheetCode;
-                    setUserData(data);
-                    if (user) saveUserData(data);
-                } catch (error) {
-                    console.error('Error processing the file:', error);
-                }
-            };
-            reader.onerror = (error) => console.error('Error reading the file:', error);
-            reader.readAsText(files[0]);
+    const handleFileLoad = useCallback((event) => {
+        const { files } = event.target;
+        if (!files.length) return;
+
+        const sheetCode = ensureSheetCode();
+        const reader = new FileReader();
+        reader.onload = ({ target }) => {
+            try {
+                let data = JSON.parse(target.result);
+                if (!data) throw new Error('Missing data');
+                data = decompressData(data);
+                if (!data.sheetCode || user !== null) data.sheetCode = sheetCode;
+                setUserData(data);
+                if (user) saveUserData(data);
+            } catch (error) {
+                console.error('Error processing the file:', error);
+            }
         };
+        reader.onerror = (error) => console.error('Error reading the file:', error);
+        reader.readAsText(files[0]);
+        event.target.value = '';
+    }, [ensureSheetCode, setUserData, user]);
 
-        const inputElement = document.getElementById('formFile');
-        inputElement.addEventListener('change', handleFileLoad);
-        return () => {
-            inputElement.removeEventListener('change', handleFileLoad);
-        };
-    }, [setUserData, user, userData.sheetCode]);
-
-    function verifyDeleteUnlock() {
+    const verifyDeleteUnlock = useCallback(() => {
         if (!unlockedStates.Delete) {
-            setUnlockedStates({...unlockedStates, Delete: true});
+            setUnlockedStates({ ...unlockedStates, Delete: true });
             return;
         }
 
-        const sheetCode = userData.sheetCode || uuidv4();
-        setUserData({nivel: 0, sheetCode});
-        saveUserData({nivel: 0, sheetCode});
-        setUnlockedStates({...unlockedStates, Delete: false});
-    }
+        const sheetCode = ensureSheetCode();
+        setUserData({ nivel: 0, sheetCode });
+        saveUserData({ nivel: 0, sheetCode });
+        setUnlockedStates({ ...unlockedStates, Delete: false });
+    }, [ensureSheetCode, setUserData, unlockedStates]);
 
-    function verifyCloudSaveUnlock() {
+    const verifyCloudSaveUnlock = useCallback(() => {
         if (!unlockedStates.CloudSave) {
-            setUnlockedStates({...unlockedStates, CloudSave: true});
+            setUnlockedStates({ ...unlockedStates, CloudSave: true });
             return;
         }
         saveUserData(userData);
-        setUnlockedStates({...unlockedStates, CloudSave: false});
-    }
+        setUnlockedStates({ ...unlockedStates, CloudSave: false });
+    }, [unlockedStates, userData]);
 
-    const saveSheetFile = () => {
-        const blob = new Blob([JSON.stringify(userData)], {type: 'application/json'});
+    const saveSheetFile = useCallback(() => {
+        const blob = new Blob([JSON.stringify(userData)], { type: 'application/json' });
         const url = URL.createObjectURL(blob);
         const link = document.createElement('a');
         link.href = url;
@@ -77,25 +73,58 @@ export default function Config() {
             document.body.removeChild(link);
             URL.revokeObjectURL(url);
         }
-    };
+    }, [userData]);
 
     return (
-        <RetroPage title="Centro de Configuracoes" subtitle="Importacao, backup e administracao de ficha">
-            <RetroPanel title="Configuracoes">
-                <div>
-                    <p>Ficha atual: {userData.nome || 'Indefinido'}</p>
-                    <p>Codigo: {userData.sheetCode || 'Indefinido'}</p>
-                    <input type="file" id="formFile" />
-                    <StyledButton onClick={() => document.getElementById('formFile').click()}>Importar</StyledButton>
-                    <StyledButton onClick={saveSheetFile}>Baixar</StyledButton>
-                    <StyledButton onClick={verifyCloudSaveUnlock}>{!unlockedStates.CloudSave ? 'Salvar na nuvem' : 'Tem certeza?'}</StyledButton>
-                    <StyledButton variant="danger" onClick={verifyDeleteUnlock}>{!unlockedStates.Delete ? 'Limpar' : 'Tem certeza?'}</StyledButton>
-                    {auth.currentUser ? <StyledButton onClick={() => navigate('/fichas')}>Trocar ficha</StyledButton> : null}
-                </div>
-            </RetroPanel>
+        <RetroPage>
+            <RetroWindow title="Config">
+                <RetroPanel title="Ficha ativa">
+                    <div className="config-grid">
+                        <RetroCard className="config-card">
+                            <p className="config-card__label">Ficha atual</p>
+                            <p className="config-card__value">{userData.nome || 'Indefinido'}</p>
+                            <p className="config-card__meta">Codigo: {userData.sheetCode || 'Indefinido'}</p>
+                        </RetroCard>
+                        <RetroCard className="config-card">
+                            <p className="config-card__label">Sessao</p>
+                            <p className="config-card__value">{auth.currentUser ? 'Sincronizada' : 'Local'}</p>
+                            <p className="config-card__meta">
+                                {auth.currentUser ? 'Dados vinculados a conta.' : 'Dados salvos apenas neste dispositivo.'}
+                            </p>
+                        </RetroCard>
+                    </div>
+                </RetroPanel>
+
+                <RetroPanel title="Gerenciamento">
+                    <div className="config-panel">
+                        <div className="config-actions">
+                            <input
+                                ref={fileInputRef}
+                                type="file"
+                                onChange={handleFileLoad}
+                                className="config-file"
+                            />
+                            <div className="config-actions__group">
+                                <StyledButton onClick={() => fileInputRef.current?.click()}>Importar ficha</StyledButton>
+                                <StyledButton onClick={saveSheetFile}>Baixar ficha</StyledButton>
+                                <StyledButton onClick={verifyCloudSaveUnlock}>
+                                    {!unlockedStates.CloudSave ? 'Salvar na nuvem' : 'Confirmar envio'}
+                                </StyledButton>
+                                {auth.currentUser ? <StyledButton onClick={() => navigate('/fichas')}>Trocar ficha</StyledButton> : null}
+                            </div>
+                        </div>
+
+                        <div className="config-danger">
+                            <p className="config-danger__title">Zona critica</p>
+                            <p className="config-danger__text">Remove dados locais da ficha atual. Esta acao nao pode ser desfeita.</p>
+                            <StyledButton variant="danger" onClick={verifyDeleteUnlock}>
+                                {!unlockedStates.Delete ? 'Limpar ficha' : 'Confirmar limpeza'}
+                            </StyledButton>
+                        </div>
+                    </div>
+                </RetroPanel>
+            </RetroWindow>
         </RetroPage>
     );
 }
-
-
 

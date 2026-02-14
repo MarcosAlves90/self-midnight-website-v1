@@ -4,8 +4,7 @@ import { v4 as uuidv4 } from 'uuid';
 import ReactModal from 'react-modal';
 import { UserContext } from '../UserContext';
 import { StyledButton, StyledTextField } from '../assets/systems/CommonComponents.jsx';
-import { retroModalStyle } from '../assets/styles/retroTheme.js';
-import { RetroPage, RetroPanel, RetroCard, RetroBadge, RetroModalHeader } from '../assets/components/RetroUI.jsx';
+import { RetroPage, RetroPanel, RetroCard, RetroBadge, RetroModalHeader, RetroWindow } from '../assets/components/RetroUI.jsx';
 
 ReactModal.setAppElement('#root');
 
@@ -13,7 +12,6 @@ export default function Page6() {
     const [modalIsOpen, setIsOpen] = useState(false);
     const [selectedItem, setSelectedItem] = useState(null);
     const [localItem, setLocalItem] = useState(null);
-    const [showQuantityInput, setShowQuantityInput] = useState(false);
     const inputRef = useRef(null);
     const [createItem, setCreateItem] = useState('');
     const [searchTerm, setSearchTerm] = useState('');
@@ -23,6 +21,12 @@ export default function Page6() {
 
     const [ducados, setDucados] = useState(userData.ducados || '000');
     const [criptogenes, setCriptogenes] = useState(userData.criptogenes || '000');
+    const normalizedSearch = searchTerm.trim().toLowerCase();
+
+    const placeHolderImage = useMemo(
+        () => 'https://pbs.twimg.com/profile_images/1488183450406461452/tH7EIigT_400x400.png',
+        []
+    );
 
     const saveDataDebounced = useCallback((data) => {
         if (debounceTimeout.current) clearTimeout(debounceTimeout.current);
@@ -35,6 +39,11 @@ export default function Page6() {
         saveDataDebounced(userData);
     }, [userData, saveDataDebounced]);
 
+    useEffect(() => {
+        setDucados(userData.ducados || '000');
+        setCriptogenes(userData.criptogenes || '000');
+    }, [userData.ducados, userData.criptogenes]);
+
     const handleElementChange = useCallback((key, value) => {
         setUserData((prevUserData) => ({ ...prevUserData, [key]: value }));
     }, [setUserData]);
@@ -46,14 +55,12 @@ export default function Page6() {
     const closeModal = useCallback(() => {
         setIsOpen(false);
         setSelectedItem(null);
-        setShowQuantityInput(false);
     }, []);
 
     const openModal = useCallback((item) => {
         setSelectedItem(item);
         setLocalItem(item);
         setIsOpen(true);
-        setShowQuantityInput(/^\s*(consumivel|consumiveis)\s*$/i.test(item.type));
     }, []);
 
     const saveItems = useCallback((newItems) => {
@@ -61,29 +68,34 @@ export default function Page6() {
     }, [handleElementChange]);
 
     const addItem = useCallback(() => {
-        let title = createItem;
-        if (!title || title.trim() === '') title = 'Novo item';
+        const title = createItem.trim() || 'Novo item';
         const itemsArray = userData.itemsArray || [];
         saveItems([...itemsArray, { title, content: '', type: '', image: '', quantity: '', id: uuidv4() }]);
         setCreateItem('');
     }, [userData.itemsArray, saveItems, createItem]);
 
+    const updateItem = useCallback((itemId, patch) => {
+        setUserData((prevUserData) => {
+            const updatedItems = (prevUserData.itemsArray || []).map((item) =>
+                item.id === itemId ? { ...item, ...patch } : item
+            );
+            return { ...prevUserData, itemsArray: updatedItems };
+        });
+    }, [setUserData]);
+
     const handleInputChange = useCallback((e) => {
         const { name, value } = e.target;
         setLocalItem((prevItem) => {
+            if (!prevItem) return prevItem;
             const updatedItem = { ...prevItem, [name]: value };
-            if (name === 'type') setShowQuantityInput(/^\s*(consumivel|consumiveis)\s*$/i.test(value));
+            updateItem(prevItem.id, { [name]: value });
             return updatedItem;
         });
-
-        setUserData((prevUserData) => {
-            const updatedItems = prevUserData.itemsArray.map((item) => item.id === localItem.id ? { ...localItem, [name]: value } : item);
-            return { ...prevUserData, itemsArray: updatedItems };
-        });
-    }, [localItem, setUserData]);
+    }, [updateItem]);
 
     const deleteItem = useCallback(() => {
-        saveItems(userData.itemsArray.filter((item) => item.id !== selectedItem.id));
+        if (!selectedItem) return;
+        saveItems((userData.itemsArray || []).filter((item) => item.id !== selectedItem.id));
         closeModal();
     }, [userData.itemsArray, selectedItem, saveItems, closeModal]);
 
@@ -102,23 +114,31 @@ export default function Page6() {
         }
     }, [userData.itemsArray, saveItems]);
 
-    const placeHolderImage = 'https://pbs.twimg.com/profile_images/1488183450406461452/tH7EIigT_400x400.png';
+    const isConsumableType = useCallback((value) => /^\s*(consumivel|consumiveis)\s*$/i.test(value || ''), []);
+    const isConsumable = isConsumableType(localItem?.type);
+
+    const extractCategories = useCallback((value) => {
+        return (value || '')
+            .split(',')
+            .map((category) => category.trim())
+            .filter((category) => category !== '');
+    }, []);
 
     const filteredItems = useMemo(() => {
         return (userData.itemsArray || []).filter((item) => {
-            const matchesSearchTerm = searchTerm === '' || Object.values(item).some((value) => value.toString().toLowerCase().includes(searchTerm.toLowerCase()));
-            const itemCategories = item.type.split(',').map((category) => category.trim()).filter((category) => category !== '');
+            const matchesSearchTerm = normalizedSearch === '' || Object.values(item).some((value) => String(value ?? '').toLowerCase().includes(normalizedSearch));
+            const itemCategories = extractCategories(item.type);
             const matchesCategories = activeCategories.length === 0 || activeCategories.some((category) => itemCategories.includes(category));
             return matchesSearchTerm && matchesCategories;
         });
-    }, [userData.itemsArray, searchTerm, activeCategories]);
+    }, [userData.itemsArray, normalizedSearch, activeCategories, extractCategories]);
 
     const uniqueCategories = useMemo(() => {
         const categories = (userData.itemsArray || [])
             .filter((item) => item.type && item.type.trim() !== '')
-            .flatMap((item) => item.type.split(',').map((category) => category.trim()).filter((category) => category !== ''));
+            .flatMap((item) => extractCategories(item.type));
         return Array.from(new Set(categories));
-    }, [userData.itemsArray]);
+    }, [userData.itemsArray, extractCategories]);
 
     const handleCurrencyChange = (key, setter) => (e) => {
         const value = e.target.value.replace(/[^0-9]/g, '');
@@ -132,21 +152,71 @@ export default function Page6() {
         handleElementChange(key, value);
     };
 
+    const clearFilters = useCallback(() => {
+        setSearchTerm('');
+        setActiveCategories([]);
+    }, []);
+
+    const itemCount = userData.itemsArray ? userData.itemsArray.length : 0;
+
+    const getSnippet = useCallback((text, max = 90) => {
+        if (!text) return '';
+        if (text.length <= max) return text;
+        return `${text.slice(0, max).trim()}...`;
+    }, []);
+
     return (
         <>
-            <ReactModal isOpen={modalIsOpen} onRequestClose={closeModal}>
+            <ReactModal
+                isOpen={modalIsOpen}
+                onRequestClose={closeModal}
+                className="retro-modal"
+                overlayClassName="retro-modal__overlay"
+            >
                 {localItem ? (
-                    <div>
+                    <div className="inventory-modal">
                         <RetroModalHeader title="Editor de item" onClose={closeModal} />
-                        <img src={localItem.image || placeHolderImage} alt="Item" />
-                        <input ref={inputRef} value={localItem.title} name="title" onChange={handleInputChange} placeholder="Titulo do seu item." />
-                        <textarea value={localItem.content} name="content" onChange={handleInputChange} placeholder="Descricao do seu item." />
-                        <div>
-                            <StyledTextField fullWidth value={localItem.type} name="type" onChange={handleInputChange} label="Categorias" />
-                            {showQuantityInput ? <StyledTextField fullWidth value={localItem.quantity || ''} name="quantity" onChange={handleInputChange} label="Quantidade" /> : null}
+                        <div className="inventory-modal__media">
+                            <div className="inventory-modal__preview">
+                                <img src={localItem.image || placeHolderImage} alt="Item" />
+                                {isConsumable ? (
+                                    <span className="inventory-card__badge">QTD {localItem.quantity || '0'}</span>
+                                ) : null}
+                            </div>
+                            <div className="inventory-modal__details">
+                                <label className="styled-field">
+                                    <span>Titulo</span>
+                                    <div className="styled-field__control">
+                                        <input ref={inputRef} value={localItem.title || ''} name="title" onChange={handleInputChange} placeholder="Titulo do item" />
+                                    </div>
+                                </label>
+                                <StyledTextField
+                                    value={localItem.type || ''}
+                                    name="type"
+                                    onChange={handleInputChange}
+                                    label="Categorias"
+                                    helperText="Separe por virgula para facilitar filtros."
+                                />
+                            </div>
                         </div>
-                        <StyledTextField fullWidth value={localItem.image} name="image" onChange={handleInputChange} label="Link da imagem" />
-                        <div>
+
+                        <div className="inventory-modal__grid">
+                            {isConsumable ? (
+                                <StyledTextField value={localItem.quantity || ''} name="quantity" onChange={handleInputChange} label="Quantidade" />
+                            ) : null}
+                            <StyledTextField value={localItem.image || ''} name="image" onChange={handleInputChange} label="Link da imagem" />
+                        </div>
+
+                        <StyledTextField
+                            multiline
+                            minRows={6}
+                            value={localItem.content || ''}
+                            name="content"
+                            onChange={handleInputChange}
+                            label="Descricao"
+                            placeholder="Descreva o item, origem e efeitos."
+                        />
+                        <div className="modal-actions">
                             <StyledButton variant="danger" onClick={deleteItem}>Deletar</StyledButton>
                             <StyledButton onClick={copyItemCode}>Copiar</StyledButton>
                         </div>
@@ -154,52 +224,108 @@ export default function Page6() {
                 ) : null}
             </ReactModal>
 
-            <RetroPage title="Inventario e Economia" subtitle="Itens, categorias e moedas do operador">
-                <RetroPanel title="Inventario">
-                    <div>
-                        <StyledTextField type="text" placeholder="nome do item..." value={createItem} onChange={(event) => setCreateItem(event.target.value)} fullWidth />
-                        <div>
-                            <StyledButton onClick={addItem}>Criar Item</StyledButton>
-                            <StyledButton onClick={pasteItemCode}>Colar Item</StyledButton>
+            <RetroPage>
+                <RetroWindow title="Economia">
+                    <RetroPanel title="Inventario">
+                        <div className="inventory-panel">
+                            <div className="inventory-header">
+                                <div className="inventory-create">
+                                    <StyledTextField
+                                        type="text"
+                                        label="Novo item"
+                                        placeholder="Nome do item..."
+                                        value={createItem}
+                                        onChange={(event) => setCreateItem(event.target.value)}
+                                        fullWidth
+                                    />
+                                    <div className="inventory-actions">
+                                        <StyledButton onClick={addItem}>Criar Item</StyledButton>
+                                        <StyledButton onClick={pasteItemCode}>Colar Item</StyledButton>
+                                    </div>
+                                </div>
+
+                                <div className="inventory-economy">
+                                    <RetroBadge>{`${itemCount} Itens`}</RetroBadge>
+                                    <div className="inventory-wallet">
+                                        <StyledTextField
+                                            label="Criptogenes"
+                                            value={criptogenes}
+                                            onChange={handleCurrencyChange('criptogenes', setCriptogenes)}
+                                            onBlur={handleCurrencyBlur('criptogenes', setCriptogenes)}
+                                            inputMode="numeric"
+                                            maxLength={4}
+                                        />
+                                        <StyledTextField
+                                            label="Rokhans"
+                                            value={ducados}
+                                            onChange={handleCurrencyChange('ducados', setDucados)}
+                                            onBlur={handleCurrencyBlur('ducados', setDucados)}
+                                            inputMode="numeric"
+                                            maxLength={4}
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="inventory-filters">
+                                <StyledTextField
+                                    type="text"
+                                    label="Pesquisar"
+                                    placeholder="Buscar por titulo, descricao ou categoria..."
+                                    value={searchTerm}
+                                    onChange={(event) => setSearchTerm(event.target.value)}
+                                    fullWidth
+                                />
+                                <div className="inventory-tags">
+                                    {uniqueCategories.map((category) => (
+                                        <RetroBadge
+                                            key={category}
+                                            active={activeCategories.includes(category)}
+                                            onClick={() => setActiveCategories(activeCategories.includes(category) ? activeCategories.filter((d) => d !== category) : [...activeCategories, category])}
+                                        >
+                                            {category.length > 40 ? `${category.slice(0, 30)}...` : category}
+                                        </RetroBadge>
+                                    ))}
+                                    {(activeCategories.length > 0 || searchTerm) ? (
+                                        <StyledButton onClick={clearFilters}>Limpar filtros</StyledButton>
+                                    ) : null}
+                                </div>
+                            </div>
                         </div>
-                        <StyledTextField type="text" placeholder="pesquisar itens..." value={searchTerm} onChange={(event) => setSearchTerm(event.target.value)} fullWidth />
-                    </div>
 
-                    <section>
-                        <RetroBadge>{`${userData.itemsArray ? userData.itemsArray.length : 0} Itens`}</RetroBadge>
-                        <RetroBadge>
-                            <input type="text" value={criptogenes} onChange={handleCurrencyChange('criptogenes', setCriptogenes)} onBlur={handleCurrencyBlur('criptogenes', setCriptogenes)} maxLength={4} />
-                            <span>Criptogenes</span>
-                        </RetroBadge>
-                        <RetroBadge>
-                            <input type="text" value={ducados} onChange={handleCurrencyChange('ducados', setDucados)} onBlur={handleCurrencyBlur('ducados', setDucados)} maxLength={4} />
-                            <span>Rokhans</span>
-                        </RetroBadge>
-                        {uniqueCategories.map((category) => (
-                            <RetroBadge
-                                key={category}
-                                active={activeCategories.includes(category)}
-                                onClick={() => setActiveCategories(activeCategories.includes(category) ? activeCategories.filter((d) => d !== category) : [...activeCategories, category])}
-                            >
-                                {category.length > 40 ? `${category.slice(0, 30)}...` : category}
-                            </RetroBadge>
-                        ))}
-                    </section>
-
-                    <article>
-                        {filteredItems.map((item) => (
-                            <RetroCard key={item.id} onClick={() => openModal(item)}>
-                                <img src={item.image || placeHolderImage} alt="Item" />
-                                <p>{item.title.toUpperCase()}</p>
-                                {/^\s*(consumivel|consumiveis)\s*$/i.test(item.type) ? <p>QTD: {(item.quantity || '').toUpperCase()}</p> : null}
-                            </RetroCard>
-                        ))}
-                    </article>
-                </RetroPanel>
+                        <article className="inventory-grid">
+                            {filteredItems.length === 0 ? (
+                                <div className="inventory-empty">
+                                    <p>Nenhum item encontrado. Crie um novo item ou ajuste os filtros.</p>
+                                </div>
+                            ) : (
+                                filteredItems.map((item) => {
+                                    const categories = extractCategories(item.type);
+                                    const quantityLabel = isConsumableType(item.type) ? `QTD ${item.quantity || '0'}` : null;
+                                    return (
+                                        <RetroCard key={item.id} onClick={() => openModal(item)} className="inventory-card">
+                                            <div className="inventory-card__media">
+                                                <img src={item.image || placeHolderImage} alt="Item" />
+                                                {quantityLabel ? <span className="inventory-card__badge">{quantityLabel}</span> : null}
+                                            </div>
+                                            <div className="inventory-card__content">
+                                                <p className="inventory-card__title">{item.title || 'Sem titulo'}</p>
+                                                <p className="inventory-card__meta">
+                                                    {categories.length > 0 ? categories.slice(0, 3).join(' • ') : 'Sem categorias'}
+                                                </p>
+                                                {item.content ? (
+                                                    <p className="inventory-card__desc">{getSnippet(item.content)}</p>
+                                                ) : null}
+                                            </div>
+                                        </RetroCard>
+                                    );
+                                })
+                            )}
+                        </article>
+                    </RetroPanel>
+                </RetroWindow>
             </RetroPage>
         </>
     );
 }
-
-
 

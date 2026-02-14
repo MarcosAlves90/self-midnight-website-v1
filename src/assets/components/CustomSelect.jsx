@@ -12,9 +12,10 @@ export default function CustomSelect({
     ...props
 }) {
     const selectId = `select-${(label || 'field').replace(/\s+/g, '-').toLowerCase()}`;
+    const wrapperStyle = fullWidth ? { width: '100%' } : undefined;
 
     return (
-        <div>
+        <div style={wrapperStyle}>
             {label ? <label htmlFor={selectId}>{label}</label> : null}
             <div>
                 <select

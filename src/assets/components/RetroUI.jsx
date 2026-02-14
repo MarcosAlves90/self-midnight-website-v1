@@ -104,3 +104,36 @@ RetroModalHeader.propTypes = {
     className: PropTypes.string,
 };
 
+export function RetroWindow({ title, status, children, className }) {
+    return (
+        <section className={joinClassNames('retro-window-shell', className)}>
+            <div className="retro-window-shell__frame retro-window">
+                <header className="retro-titlebar">
+                    <div className="retro-titlebar__left">
+                        <div className="retro-titlebar__icon" />
+                        <h2 className="retro-titlebar__title">{title}</h2>
+                    </div>
+                    <div className="retro-titlebar__controls">
+                        <button type="button" aria-label="Minimizar">_</button>
+                        <button type="button" aria-label="Maximizar">[]</button>
+                        <button type="button" aria-label="Fechar">X</button>
+                    </div>
+                </header>
+                {status ? (
+                    <div className="retro-status-bar">
+                        <span className="retro-ticker">{status}</span>
+                    </div>
+                ) : null}
+                <div className="retro-window-shell__content">{children}</div>
+            </div>
+        </section>
+    );
+}
+
+RetroWindow.propTypes = {
+    title: PropTypes.string.isRequired,
+    status: PropTypes.string,
+    children: PropTypes.node,
+    className: PropTypes.string,
+};
+
