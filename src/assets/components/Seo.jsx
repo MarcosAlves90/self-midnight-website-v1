@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import PropTypes from 'prop-types';
 import { useLocation } from 'react-router-dom';
 
 const SITE_NAME = 'HighNoon';
@@ -60,3 +61,10 @@ export default function Seo({ title, description, image, noIndex = false }) {
 
     return null;
 }
+
+Seo.propTypes = {
+    title: PropTypes.string,
+    description: PropTypes.string,
+    image: PropTypes.string,
+    noIndex: PropTypes.bool,
+};

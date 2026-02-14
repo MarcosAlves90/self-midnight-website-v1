@@ -15,20 +15,65 @@ export default function SheetSelectionPage() {
     const [loading, setLoading] = useState(true);
     const { userData, setUserData } = useContext(UserContext);
     const navigate = useNavigate();
+    const buildSheetSnapshot = useCallback((data) => ({
+        ...data,
+        sheetCode: data.sheetCode || uuidv4(),
+        nome: data.nome || 'Ficha sem nome',
+        updatedAt: Date.now(),
+    }), []);
+
+    const buildEmptySheet = useCallback((name) => ({
+        sheetCode: uuidv4(),
+        nome: name,
+        nivel: 0,
+        updatedAt: Date.now(),
+    }), []);
+
+    const formatUpdatedAt = useCallback((timestamp) => {
+        if (!timestamp) return 'Sem data';
+        const date = new Date(timestamp);
+        return date.toLocaleString('pt-BR', {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+        });
+    }, []);
+
+    const resolveDuplicateNames = (list) => {
+        const counts = new Map();
+        return list.map((sheet) => {
+            const baseName = sheet.nome || 'Ficha sem nome';
+            const current = counts.get(baseName) || 0;
+            counts.set(baseName, current + 1);
+            if (current === 0) return { ...sheet, nome: baseName };
+            return { ...sheet, nome: `${baseName} (${current + 1})` };
+        });
+    };
 
     const normalizeSheets = useCallback((sheetsData) => {
-        if (!sheetsData.length) return sheetsData;
-        const updated = sheetsData.map((sheet) => {
-            const isConflictingCode = sheet.sheetCode === userData.sheetCode;
-            const isConflictingName = sheet.nome === userData.nome;
-            return {
-                ...sheet,
-                sheetCode: isConflictingCode ? uuidv4() : sheet.sheetCode,
-                nome: isConflictingName ? `${sheet.nome} [Erro]` : sheet.nome,
-            };
+        if (!Array.isArray(sheetsData) || sheetsData.length === 0) return [];
+        const filtered = sheetsData
+            .filter(Boolean)
+            .filter((sheet) => sheet.sheetCode && sheet.sheetCode !== userData.sheetCode);
+
+        const byCode = new Map();
+        filtered.forEach((sheet) => {
+            const code = sheet.sheetCode || uuidv4();
+            const prev = byCode.get(code);
+            if (!prev || (sheet.updatedAt || 0) >= (prev.updatedAt || 0)) {
+                byCode.set(code, { ...sheet, sheetCode: code });
+            }
         });
-        return updated;
-    }, [userData.sheetCode, userData.nome]);
+
+        return resolveDuplicateNames(Array.from(byCode.values()));
+    }, [userData.sheetCode]);
+
+    const persistSheets = useCallback((nextSheets) => {
+        setSheets(nextSheets);
+        saveUserSheets(nextSheets);
+    }, []);
 
     const fetchSheets = useCallback(async () => {
         if (!auth.currentUser) {
@@ -38,10 +83,8 @@ export default function SheetSelectionPage() {
 
         const sheetsData = (await getUserData('sheets')) || [];
         const normalized = normalizeSheets(sheetsData);
-        if (normalized.length > 0) {
-            setSheets(normalized);
-            saveUserSheets(normalized);
-        }
+        setSheets(normalized);
+        if (normalized.length !== sheetsData.length) saveUserSheets(normalized);
         setLoading(false);
     }, [normalizeSheets]);
 
@@ -55,33 +98,54 @@ export default function SheetSelectionPage() {
             console.error('O nome da ficha esta vazio ou e igual ao nome de outra ficha.');
             return;
         }
-        const newSheet = { sheetCode: uuidv4(), nome: trimmedName };
+        const newSheet = buildEmptySheet(trimmedName);
         const updatedSheets = [...sheets, newSheet];
-        saveUserSheets(updatedSheets);
-        setSheets(updatedSheets);
+        persistSheets(updatedSheets);
         setNewSheetName('');
-    }, [newSheetName, sheets]);
+    }, [newSheetName, sheets, buildEmptySheet, persistSheets]);
+
+    const duplicateSheet = useCallback((sheetCode) => {
+        const sheet = sheets.find((item) => item.sheetCode === sheetCode);
+        if (!sheet) return;
+        const baseName = sheet.nome || 'Ficha sem nome';
+        const newSheet = {
+            ...sheet,
+            sheetCode: uuidv4(),
+            nome: `${baseName} (copia)`,
+            updatedAt: Date.now(),
+        };
+        const updatedSheets = [...sheets, newSheet];
+        persistSheets(updatedSheets);
+    }, [sheets, persistSheets]);
 
     const deleteSheet = useCallback((sheetCode) => {
-        if (!window.confirm('Quer mesmo deletar essa ficha? Esse processo e irreversível.')) return;
+        if (!window.confirm('Quer mesmo deletar essa ficha? Esse processo e irreversivel.')) return;
         const updatedSheets = sheets.filter((sheet) => sheet.sheetCode !== sheetCode);
-        saveUserSheets(updatedSheets);
-        setSheets(updatedSheets);
-    }, [sheets]);
+        persistSheets(updatedSheets);
+    }, [sheets, persistSheets]);
 
     const switchSheet = useCallback((sheetCode) => {
-        let selectedSheet = sheets.find((sheet) => sheet.sheetCode === sheetCode);
+        const selectedSheet = sheets.find((sheet) => sheet.sheetCode === sheetCode);
         if (!selectedSheet) return;
 
-        let updatedSheets = sheets.filter((sheet) => sheet.sheetCode !== sheetCode);
-        updatedSheets = [...updatedSheets, userData];
-        saveUserSheets(updatedSheets);
+        const snapshot = buildSheetSnapshot(userData);
+        const updatedSheets = [...sheets.filter((sheet) => sheet.sheetCode !== sheetCode), snapshot];
+        persistSheets(updatedSheets);
 
-        selectedSheet = decompressData(selectedSheet);
-        saveUserData(selectedSheet);
-        setUserData(selectedSheet);
+        const hydrated = decompressData(selectedSheet);
+        saveUserData(hydrated);
+        setUserData(hydrated);
         navigate('/individual');
-    }, [navigate, setUserData, sheets, userData]);
+    }, [buildSheetSnapshot, navigate, persistSheets, setUserData, sheets, userData]);
+
+    useEffect(() => {
+        if (!auth.currentUser) return;
+        return () => {
+            const snapshot = buildSheetSnapshot(userData);
+            const updatedSheets = normalizeSheets([...sheets, snapshot]);
+            persistSheets(updatedSheets);
+        };
+    }, [buildSheetSnapshot, normalizeSheets, persistSheets, sheets, userData]);
 
     const sheetCount = sheets.length;
     const currentLabel = userData.nome || userData.sheetCode || 'Ficha atual';
@@ -137,9 +201,11 @@ export default function SheetSelectionPage() {
                                                 <div className="sheet-card__content">
                                                     <p className="sheet-card__title">{sheet.nome || sheet.sheetCode}</p>
                                                     <p className="sheet-card__meta">{sheet.sheetCode}</p>
+                                                    <p className="sheet-card__meta">Atualizado: {formatUpdatedAt(sheet.updatedAt)}</p>
                                                 </div>
                                                 <div className="sheet-card__actions">
                                                     <StyledButton onClick={() => switchSheet(sheet.sheetCode)}>Selecionar</StyledButton>
+                                                    <StyledButton onClick={() => duplicateSheet(sheet.sheetCode)}>Duplicar</StyledButton>
                                                     <StyledButton variant="danger" onClick={() => deleteSheet(sheet.sheetCode)}>Excluir</StyledButton>
                                                 </div>
                                             </RetroCard>
