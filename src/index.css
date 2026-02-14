@@ -49,6 +49,8 @@
     --color-modification: #22c55e;
     --color-creation: #60a5fa;
     --retro-body-gradient: radial-gradient(circle at top, #18223a 0%, #0a0f1b 60%, #05070f 100%);
+    --scanline-strong: rgba(8, 13, 20, 0.2);
+    --scanline-soft: rgba(255, 255, 255, 0.04);
 }
 
 :root[data-theme='dark'] {
@@ -76,6 +78,8 @@
     --purple-pre: #9e90ea;
     --green-vig: #54d08a;
     --retro-body-gradient: radial-gradient(circle at top, #111a30 0%, #090e1a 56%, #04070e 100%);
+    --scanline-strong: rgba(0, 0, 0, 0.32);
+    --scanline-soft: rgba(255, 255, 255, 0.06);
 }
 
 *,
@@ -165,6 +169,24 @@ label {
 
 .app-shell {
     min-height: 100vh;
+}
+
+.scanline-overlay {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 40;
+    opacity: 0.38;
+    background:
+        linear-gradient(
+            to bottom,
+            transparent 0%,
+            var(--scanline-soft) 48%,
+            var(--scanline-strong) 50%,
+            transparent 52%
+        );
+    background-size: 100% 4px;
+    animation: scanline-drift 9s linear infinite;
 }
 
 .retro-background {
@@ -1974,6 +1996,15 @@ label {
     100% {
         clip-path: inset(60% 0 0 0);
         transform: translate(0, 1px);
+    }
+}
+
+@keyframes scanline-drift {
+    from {
+        background-position: 0 0;
+    }
+    to {
+        background-position: 0 120px;
     }
 }
 

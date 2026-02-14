@@ -104,6 +104,7 @@ function App() {
     return (
         <SidebarProvider>
             <main className="app-shell">
+                <div className="scanline-overlay" aria-hidden="true" />
                 {shouldShowNavBar ? <NavBar /> : null}
                 <Suspense fallback={<LoadingFallback />}>
                     <Routes>
