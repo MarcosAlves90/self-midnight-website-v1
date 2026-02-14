@@ -49,8 +49,11 @@
     --color-modification: #22c55e;
     --color-creation: #60a5fa;
     --retro-body-gradient: radial-gradient(circle at top, #18223a 0%, #0a0f1b 60%, #05070f 100%);
-    --scanline-strong: rgba(8, 13, 20, 0.2);
-    --scanline-soft: rgba(255, 255, 255, 0.04);
+    --scanline-dark: rgba(7, 11, 18, 0.12);
+    --scanline-light: rgba(255, 255, 255, 0.05);
+    --scanline-opacity: 0.34;
+    --scanline-z: 10001;
+    --scanline-blend: normal;
 }
 
 :root[data-theme='dark'] {
@@ -78,8 +81,10 @@
     --purple-pre: #9e90ea;
     --green-vig: #54d08a;
     --retro-body-gradient: radial-gradient(circle at top, #111a30 0%, #090e1a 56%, #04070e 100%);
-    --scanline-strong: rgba(0, 0, 0, 0.32);
-    --scanline-soft: rgba(255, 255, 255, 0.06);
+    --scanline-dark: rgba(0, 0, 0, 0.22);
+    --scanline-light: rgba(255, 255, 255, 0.05);
+    --scanline-opacity: 0.3;
+    --scanline-blend: normal;
 }
 
 *,
@@ -175,18 +180,28 @@ label {
     position: fixed;
     inset: 0;
     pointer-events: none;
-    z-index: 40;
-    opacity: 0.38;
-    background:
-        linear-gradient(
+    z-index: var(--scanline-z);
+    opacity: var(--scanline-opacity);
+    mix-blend-mode: var(--scanline-blend);
+    background-image:
+        repeating-linear-gradient(
             to bottom,
-            transparent 0%,
-            var(--scanline-soft) 48%,
-            var(--scanline-strong) 50%,
-            transparent 52%
+            var(--scanline-dark) 0px,
+            var(--scanline-dark) 1px,
+            transparent 1px,
+            transparent 4px
+        ),
+        repeating-linear-gradient(
+            to bottom,
+            transparent 0px,
+            transparent 2px,
+            var(--scanline-light) 2px,
+            var(--scanline-light) 3px,
+            transparent 3px,
+            transparent 4px
         );
-    background-size: 100% 4px;
-    animation: scanline-drift 9s linear infinite;
+    background-size: 100% 4px, 100% 4px;
+    animation: scanline-drift 14s linear infinite;
 }
 
 .retro-background {
@@ -206,17 +221,7 @@ label {
 }
 
 .retro-background__noise {
-    position: absolute;
-    inset: 0;
-    background-image: repeating-linear-gradient(
-        0deg,
-        rgba(255, 255, 255, 0.03) 0px,
-        rgba(255, 255, 255, 0.03) 1px,
-        transparent 1px,
-        transparent 3px
-    );
-    mix-blend-mode: screen;
-    opacity: 0.3;
+    display: none;
 }
 
 .retro-background__glow {
@@ -388,19 +393,7 @@ label {
 }
 
 .retro-window::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: repeating-linear-gradient(
-        0deg,
-        rgba(0, 0, 0, 0.08) 0px,
-        rgba(0, 0, 0, 0.08) 1px,
-        transparent 1px,
-        transparent 3px
-    );
-    mix-blend-mode: multiply;
-    pointer-events: none;
-    opacity: 0.25;
+    content: none;
 }
 
 .retro-window-shell {
@@ -2001,10 +1994,10 @@ label {
 
 @keyframes scanline-drift {
     from {
-        background-position: 0 0;
+        background-position: 0 0, 0 0;
     }
     to {
-        background-position: 0 120px;
+        background-position: 0 90px, 0 -55px;
     }
 }
 
